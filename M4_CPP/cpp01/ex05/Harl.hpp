@@ -13,10 +13,10 @@ class Harl
 		void error( void );
 	
 	public:
-	Harl();
-	~Harl();
+		Harl();
+		~Harl();
 	
-	void complain( std::string level );
+		void complain( std::string level );
 	
 };
 
