@@ -1,0 +1,17 @@
+#ifndef WRONGCAT_HPP
+#define WRONGCAT_HPP
+
+#include "../includes/WrongAnimal.hpp"
+
+class WrongCat : public WrongAnimal
+{
+	public :
+		WrongCat();
+		WrongCat(WrongCat const &cpy);
+		WrongCat & operator=(WrongCat const &other);
+		~WrongCat();
+
+		void makeSound(void) const;
+};
+
+#endif
