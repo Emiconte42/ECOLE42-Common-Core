@@ -1,0 +1,18 @@
+# Fichiers compilés
+*.o
+*.a
+*.d
+*.so
+*.out
+
+# Exécutables
+M3_PHILO/philo/philo
+M4_CPP/ex03/materia
+
+# Système et éditeur
+.DS_Store
+.vscode/
+
+# Secrets
+.env
+.env.*
