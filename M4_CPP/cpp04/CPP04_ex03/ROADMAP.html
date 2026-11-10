@@ -1,0 +1,1593 @@
+<title>CPP04-Ex03</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout : une colonne de lecture. Chaque phase = une grande section numérotée (l'ordre est réel), cases à cocher en fin de phase. Schémas mémoire en SVG : pile à gauche, tas à droite. */
+:root {
+  --bg: #F5F7FA;
+  --surface: #FFFFFF;
+  --ink: #18202B;
+  --muted: #5A6676;
+  --line: #D9E0E9;
+  --ice: #2366C4;
+  --ice-soft: #E3EEFC;
+  --cure: #1E8457;
+  --cure-soft: #E1F4EA;
+  --warn: #A65A00;
+  --warn-soft: #FFF1DC;
+  --bad: #B3261E;
+  --bad-soft: #FDE7E5;
+  --code-bg: #EEF2F7;
+  --hl-y: #FFF27A; --hl-g: #BDF5B8; --hl-o: #FFD29A; --hl-b: #C4E2FF; --hl-p: #FFC2DF; --paper-line: #E4EAF2;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11161D; --surface: #18202A; --ink: #E7ECF2; --muted: #9AA7B6; --line: #2C3644;
+  --ice: #7DB1F5; --ice-soft: #1C2D45; --cure: #6BD3A0; --cure-soft: #17352A;
+  --warn: #F2B35E; --warn-soft: #3A2A14; --bad: #FF8A80; --bad-soft: #3D1C1A; --code-bg: #0E131A;
+  --hl-y: #5C5414; --hl-g: #1F4D2B; --hl-o: #5E3C12; --hl-b: #1D3D61; --hl-p: #5E2446; --paper-line: #222B37; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #11161D; --surface: #18202A; --ink: #E7ECF2; --muted: #9AA7B6; --line: #2C3644;
+  --ice: #7DB1F5; --ice-soft: #1C2D45; --cure: #6BD3A0; --cure-soft: #17352A;
+  --warn: #F2B35E; --warn-soft: #3A2A14; --bad: #FF8A80; --bad-soft: #3D1C1A; --code-bg: #0E131A;
+  --hl-y: #5C5414; --hl-g: #1F4D2B; --hl-o: #5E3C12; --hl-b: #1D3D61; --hl-p: #5E2446; --paper-line: #222B37; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 17px; line-height: 1.6; }
+.wrap { max-width: 840px; margin: 0 auto; padding-block: 40px 80px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 6vw, 3rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 1.6rem; font-weight: 800; }
+h3 { font-size: 1.15rem; font-weight: 600; }
+p { margin: 0; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 62ch; }
+.eyebrow { font-family: var(--f-mono); font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+code { font-family: var(--f-mono); font-size: .88em; }
+:not(pre) > code { background: var(--code-bg); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 0; font-size: .85rem; line-height: 1.55; }
+pre code { font-size: inherit; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+section { margin-top: 64px; display: flex; flex-direction: column; gap: 18px; }
+ul, ol { margin: 0; padding-left: 1.3em; } li + li { margin-top: 4px; }
+a { color: var(--ice); }
+.dur { font-family: var(--f-mono); font-size: .8rem; color: var(--muted); font-weight: 400; }
+
+.status { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.status > div { background: var(--surface); padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.status .now { background: var(--ice-soft); }
+@media (max-width: 640px) { .status { grid-template-columns: 1fr; } }
+.total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-top: 20px; }
+.total b { font-family: var(--f-display); font-size: 1.5rem; }
+
+.phase-head { display: flex; gap: 14px; align-items: center; }
+.num { width: 48px; height: 48px; flex: none; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-display); font-weight: 800; font-size: 1.2rem; background: var(--surface); border: 2px solid var(--line); color: var(--muted); }
+.num.done { background: var(--cure); border-color: var(--cure); color: var(--surface); }
+.num.now { background: var(--ice); border-color: var(--ice); color: var(--surface); }
+.phase-head > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tag-now { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ice); font-weight: 600; }
+
+.story { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.story > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.story b { font-family: var(--f-display); }
+@media (max-width: 600px) { .story { grid-template-columns: 1fr; } }
+
+.diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; }
+.diagram svg { display: block; min-width: 560px; width: 100%; height: auto; }
+.d-iface { fill: var(--ice-soft); stroke: var(--ice); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.d-abs { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.5; }
+.d-con { fill: var(--cure-soft); stroke: var(--cure); stroke-width: 1.5; }
+.d-stack { fill: var(--ice-soft); stroke: var(--ice); stroke-width: 1.5; }
+.d-plain { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.d-null { fill: var(--code-bg); stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.d-zone { fill: none; stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 4; }
+.d-t { fill: var(--ink); font-family: var(--f-display); font-weight: 600; font-size: 15px; }
+.d-s { fill: var(--muted); font-family: var(--f-mono); font-size: 11px; }
+.d-m { fill: var(--ink); font-family: var(--f-mono); font-size: 12px; }
+.d-bad { fill: var(--bad); font-family: var(--f-body); font-weight: 700; font-size: 13px; }
+.d-ok { fill: var(--cure); font-family: var(--f-body); font-weight: 700; font-size: 13px; }
+.d-arrow { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+.d-ptr { stroke: var(--ice); stroke-width: 2; fill: none; }
+.d-ptr-bad { stroke: var(--bad); stroke-width: 2; fill: none; }
+.d-has { stroke: var(--ice); stroke-width: 1.5; fill: none; stroke-dasharray: 2 4; }
+.d-head { fill: var(--muted); } .d-head2 { fill: var(--ice); } .d-head3 { fill: var(--bad); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: .85rem; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.lg-i::before { background: var(--ice-soft); border: 1.5px dashed var(--ice); }
+.lg-a::before { background: var(--warn-soft); border: 1.5px solid var(--warn); }
+.lg-c::before { background: var(--cure-soft); border: 1.5px solid var(--cure); }
+.caption { font-size: .9rem; color: var(--muted); }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.card h3 .k { font-family: var(--f-mono); font-size: .8rem; color: var(--muted); font-weight: 400; margin-right: 6px; }
+.why { border-left: 3px solid var(--cure); padding: 2px 0 2px 12px; }
+.why::before { content: "À quoi ça sert ici : "; font-weight: 700; color: var(--cure); }
+.trap { background: var(--warn-soft); border-radius: 8px; padding: 10px 14px; }
+.trap::before { content: "Piège : "; font-weight: 700; color: var(--warn); }
+.tip { background: var(--ice-soft); border-radius: 8px; padding: 10px 14px; }
+.tip::before { content: "Astuce : "; font-weight: 700; color: var(--ice); }
+.alert { background: var(--bad-soft); border-radius: 8px; padding: 10px 14px; }
+.alert::before { content: "Refusé en évaluation : "; font-weight: 700; color: var(--bad); }
+.contra { background: var(--bad-soft); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.contra > b:first-child { color: var(--bad); }
+.group { font-family: var(--f-display); font-weight: 800; font-size: 1.25rem; margin-top: 12px; }
+
+details.q { border: 1px dashed var(--ice); border-radius: 8px; background: var(--ice-soft); }
+details.q summary { cursor: pointer; padding: 10px 14px; font-weight: 700; color: var(--ice); }
+details.q summary::marker { color: var(--ice); }
+details.q > div { padding: 0 14px 12px; }
+details.q > div::before { content: "Réponse : "; font-weight: 700; }
+
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: .95rem; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--f-mono); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.checks { list-style: none; padding: 16px; display: flex; flex-direction: column; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.checks li { margin: 0; }
+.checks .ttl { font-family: var(--f-mono); font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.checks label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.checks input { margin-top: 5px; width: 17px; height: 17px; accent-color: var(--cure); flex: none; }
+.checks input:checked + span { color: var(--muted); text-decoration: line-through; }
+input:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--ice); outline-offset: 2px; }
+
+.file { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.file-name { font-family: var(--f-mono); font-weight: 600; font-size: 1rem; color: var(--ice); }
+.kv { display: grid; grid-template-columns: 9.5em minmax(0,1fr); gap: 6px 14px; margin: 0; }
+.kv dt { font-weight: 700; color: var(--muted); font-size: .92rem; }
+.kv dd { margin: 0; min-width: 0; }
+@media (max-width: 560px) { .kv { grid-template-columns: 1fr; } .kv dd { margin-bottom: 6px; } }
+
+.progress { display: flex; align-items: center; gap: 12px; font-family: var(--f-mono); font-size: .85rem; color: var(--muted); }
+.bar { flex: 1; height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--cure); transition: width .3s; }
+@media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
+
+.paper { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 0;
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 31px, var(--paper-line) 31px, var(--paper-line) 32px); }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 8px 20px; padding: 12px 18px; border-bottom: 1px dashed var(--line); }
+.row:last-child { border-bottom: 0; }
+.row pre { background: transparent; border: 0; padding: 0; font-size: .9rem; white-space: pre-wrap; word-break: break-word; }
+.notes { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: .93rem; }
+.notes li { margin: 0; }
+.notes li::before { content: "→ "; color: var(--muted); }
+.m { padding: 1px 5px; border-radius: 3px; color: var(--ink); font-family: var(--f-mono); font-size: .88em; }
+.m.y { background: var(--hl-y); } .m.g { background: var(--hl-g); } .m.o { background: var(--hl-o); } .m.b { background: var(--hl-b); } .m.p { background: var(--hl-p); }
+.row pre .m { font-size: inherit; }
+@media (max-width: 700px) { .row { grid-template-columns: 1fr; } }
+
+/* Navigation une étape à la fois */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.steps { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; margin-top: 24px; border-bottom: 1px solid var(--line); }
+.steps-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+.steps a { flex: none; text-decoration: none; font-family: var(--f-mono); font-size: .8rem; padding: 6px 10px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); white-space: nowrap; }
+.steps a[aria-current="true"] { background: var(--ice); border-color: var(--ice); color: var(--surface); }
+.steps a.all { border-style: dashed; color: var(--muted); }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; flex-wrap: wrap; }
+.pager a { text-decoration: none; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-weight: 700; }
+.pager a[hidden] { display: none; }
+details.lock { border: 1px solid var(--warn); border-radius: 8px; background: var(--warn-soft); }
+details.lock summary { cursor: pointer; padding: 10px 14px; font-weight: 700; color: var(--warn); }
+details.lock summary::after { content: "  (seulement après avoir écrit le tien)"; font-weight: 400; color: var(--muted); }
+details.lock[open] summary::after { content: ""; }
+details.lock > div { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+pre.mission { background: var(--surface); border-style: dashed; }
+.card h4 { font-family: var(--f-display); font-size: 1rem; }
+</style>
+
+<div class="wrap">
+  <header class="stack">
+    <span class="eyebrow">CPP Module 04 · ex03 · Interface &amp; recap</span>
+    <h1>Feuille de route Materia</h1>
+    <p class="lead">Tout l'ex03 sur une seule page, écrit pour une débutante. On suit ta méthode : comprendre le main, apprendre les notions, créer les fichiers, écrire le squelette, remplir le code, tester, puis préparer la défense.</p>
+
+    <div class="total"><b>Durée totale : environ 10 h</b><span class="caption">en 4 séances de 2 h 30. Chaque phase et chaque étape indique sa durée.</span></div>
+
+    <div class="status" aria-label="Où on en est">
+      <div><span class="eyebrow">Objectif</span><p>Des personnages qui équipent et lancent des sorts, avec des interfaces et zéro fuite mémoire.</p></div>
+      <div class="now"><span class="eyebrow">Étape actuelle</span><p><b>Phase 5, étape 5.2 :</b> corriger les includes des <code>.hpp</code>.</p></div>
+      <div><span class="eyebrow">Prochaine action</span><p>Remplacer les <code>#include</code> qui tournent en rond par <code>class X;</code> dans <code>AMateria.hpp</code>, <code>ICharacter.hpp</code> et <code>IMateriaSource.hpp</code>.</p></div>
+    </div>
+    <div class="progress"><div class="bar"><i id="bar"></i></div><span id="pct">0 / 0</span></div>
+    <p class="caption">Tu vois une étape à la fois. Choisis-la dans la barre ci-dessous, ou clique sur « Tout voir ».</p>
+  </header>
+
+  <nav class="steps" aria-label="Étapes">
+    <div class="steps-row">
+      <a href="#regles">Règles</a><a href="#plan">Plan</a><a href="#p1">1 · Histoire</a><a href="#p2">2 · Main</a><a href="#p3">3 · Notions</a><a href="#p4">4 · Fichiers</a><a href="#p5">5 · Squelette</a><a href="#p6">6 · Code</a><a href="#p7">7 · Tests</a><a href="#p8">8 · Grille</a><a href="#p9">9 · Défense</a><a href="#recap">Fiche</a><a href="#erreurs">Erreurs</a><a href="#cahier">Cahier</a><a href="#tout" class="all">Tout voir</a>
+    </div>
+  </nav>
+
+  <!-- REGLES -->
+  <section id="regles">
+    <span class="eyebrow">Avant de commencer · 5 min</span>
+    <h2>Les règles du jeu</h2>
+    <p>Le <b>sujet</b> et la <b>grille de correction</b> ont le dernier mot sur tout, même sur cette page. Voici ce que la grille vérifie en tout premier. Un seul point raté, et l'exercice n'est pas noté.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Règle</th><th>En pratique</th></tr></thead>
+      <tbody>
+        <tr><td>Compilation</td><td><code>c++ -Wall -Wextra -Werror -std=c++98</code>, aucun autre compilateur</td></tr>
+        <tr><td>Standard C++98</td><td>pas de <code>nullptr</code>, pas de <code>auto</code>, rien du C++11</td></tr>
+        <tr><td>Interdits</td><td><code>printf</code>, <code>malloc</code>, <code>free</code>, <code>using namespace</code>, <code>friend</code>, bibliothèques externes, conteneurs de la STL</td></tr>
+        <tr><td>Pas de code dans un <code>.hpp</code></td><td>les fonctions s'écrivent dans le <code>.cpp</code> (voir l'exception juste en dessous)</td></tr>
+        <tr><td>Forme canonique</td><td>dans chaque classe concrète et abstraite (voir A3)</td></tr>
+        <tr><td>Destructeur virtuel</td><td>une interface sans destructeur virtuel = exercice non noté</td></tr>
+        <tr><td>Tests</td><td>assez nombreux pour prouver que tout marche, sinon exercice non noté</td></tr>
+        <tr><td>Mémoire</td><td>zéro fuite (valgrind)</td></tr>
+        <tr><td>Makefile</td><td>règles <code>$(NAME)</code>, <code>all</code>, <code>clean</code>, <code>fclean</code>, <code>re</code></td></tr>
+      </tbody>
+    </table></div>
+    <div class="contra">
+      <b>Contradiction à connaître entre le sujet et la grille</b>
+      <p>La grille dit : « une fonction implémentée dans un header → ne notez pas ». Mais le sujet impose <code>virtual ~ICharacter() {}</code> dans l'interface. Les <code>{}</code>, c'est du code dans un <code>.hpp</code>.</p>
+      <p><b>Ce qu'on fait :</b> on recopie les 2 interfaces <b>exactement</b> comme le sujet, car la grille demande aussi qu'elles soient « présentes exactement comme demandé dans le sujet ». Partout ailleurs : <b>zéro code</b> dans les <code>.hpp</code>.</p>
+      <p><b>En défense :</b> « Ces <code>{}</code> viennent du sujet, je les ai recopiés à l'identique. Toutes mes autres fonctions sont dans les <code>.cpp</code>. »</p>
+    </div>
+    <p class="caption">La Norminette ne s'applique pas au C++. On suit les règles de la grille ci-dessus.</p>
+  </section>
+
+  <!-- PLAN -->
+  <section id="plan">
+    <span class="eyebrow">Vue d'ensemble</span>
+    <h2>Le plan et les durées</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Phase</th><th>Ce que tu fais</th><th>Durée</th></tr></thead>
+      <tbody>
+        <tr><td class="n">1</td><td><a href="#p1">Comprendre l'histoire et la carte</a></td><td class="n">20 min</td></tr>
+        <tr><td class="n">2</td><td><a href="#p2">Comprendre le main du sujet</a></td><td class="n">20 min</td></tr>
+        <tr><td class="n">3</td><td><a href="#p3">Apprendre les notions</a> : bases du C++, puis notions du module</td><td class="n">2 h</td></tr>
+        <tr><td class="n">4</td><td><a href="#p4">Créer les fichiers vides</a></td><td class="n">15 min</td></tr>
+        <tr><td class="n">5</td><td><a href="#p5">Écrire le squelette</a> : includes, classes, fonctions vides. Objectif : ça compile.</td><td class="n">1 h 30</td></tr>
+        <tr><td class="n">6</td><td><a href="#p6">Remplir le code</a>, un fichier à la fois : Character, puis les Materias, puis MateriaSource</td><td class="n">3 h 30</td></tr>
+        <tr><td class="n">7</td><td><a href="#p7">Écrire les tests</a>, y compris ceux qui cassent un code fragile</td><td class="n">1 h 15</td></tr>
+        <tr><td class="n">8</td><td><a href="#p8">Vérifier avec la grille de correction</a></td><td class="n">30 min</td></tr>
+        <tr><td class="n">9</td><td><a href="#p9">Simuler la défense</a> ensemble : 5 questions d'évaluateur</td><td class="n">30 min</td></tr>
+        <tr><td class="n"></td><td><b>Total</b></td><td class="n"><b>≈ 10 h</b></td></tr>
+      </tbody>
+    </table></div>
+    <p>À la fin de la page : <a href="#recap">la fiche de soutenance</a>, <a href="#erreurs">les erreurs de compilation fréquentes</a> et <a href="#cahier">le main annoté, façon cahier</a>.</p>
+  </section>
+
+  <!-- PHASE 1 -->
+  <section id="p1">
+    <div class="phase-head"><span class="num done">1</span><div><span class="eyebrow">Phase 1 · 20 min</span><h2>L'histoire et la carte</h2></div></div>
+    <p>Le sujet vient du jeu <i>Final Fantasy VII</i>. Une <b>Materia</b> est une petite boule magique. On la range dans l'équipement d'un personnage, et elle lui donne un sort.</p>
+    <div class="story">
+      <div><b>AMateria</b><p>Un sort « en général ». Il n'existe jamais tout seul, on a toujours un sort précis. Donc la classe est <b>abstraite</b>.</p></div>
+      <div><b>Ice et Cure</b><p>Deux sorts précis. Ice attaque (« shoots an ice bolt »). Cure soigne (« heals … wounds »).</p></div>
+      <div><b>Character</b><p>Un héros avec un sac de 4 emplacements. Il équipe des Materias, les pose par terre, et les lance sur une cible.</p></div>
+      <div><b>MateriaSource</b><p>Un livre de recettes. Il apprend jusqu'à 4 modèles de sorts. Ensuite, on lui dit « fais-moi un ice » et il fabrique une copie neuve.</p></div>
+    </div>
+    <p>Derrière l'histoire, le sujet teste <b>3 choses</b> :</p>
+    <ul>
+      <li>Copier un objet <b>sans connaître son vrai type</b>. C'est le rôle de <code>clone()</code>.</li>
+      <li>Écrire et utiliser des <b>interfaces</b> : <code>ICharacter</code> et <code>IMateriaSource</code>.</li>
+      <li>Savoir <b>qui doit faire le <code>delete</code></b> de chaque objet. C'est là que les fuites mémoire arrivent.</li>
+    </ul>
+
+    <h3>Le rôle des 7 classes</h3>
+    <p>Le <b>rôle</b>, c'est à quoi sert la classe dans le programme, en une phrase. C'est ce que tu dirais pour la présenter au correcteur.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Classe</th><th>Genre</th><th>Hérite de</th><th>Son rôle en une phrase</th></tr></thead>
+      <tbody>
+        <tr><td><code>ICharacter</code></td><td>interface</td><td>rien</td><td>Le contrat d'un personnage : il dit ce qu'un personnage sait faire (avoir un nom, équiper, déséquiper, lancer un sort).</td></tr>
+        <tr><td><code>Character</code></td><td>concrète</td><td><code>ICharacter</code></td><td>Le vrai héros : il a un nom et un sac de 4 Materias, et il fait ce que promet <code>ICharacter</code>.</td></tr>
+        <tr><td><code>AMateria</code></td><td>abstraite</td><td>rien</td><td>Le moule commun des sorts : il garde le type (<code>"ice"</code>, <code>"cure"</code>) et oblige chaque sort à savoir se copier (<code>clone</code>).</td></tr>
+        <tr><td><code>Ice</code></td><td>concrète</td><td><code>AMateria</code></td><td>Un sort d'attaque : il affiche <code>* shoots an ice bolt at bob *</code>.</td></tr>
+        <tr><td><code>Cure</code></td><td>concrète</td><td><code>AMateria</code></td><td>Un sort de soin : il affiche <code>* heals bob's wounds *</code>.</td></tr>
+        <tr><td><code>IMateriaSource</code></td><td>interface</td><td>rien</td><td>Le contrat d'un livre de recettes : il dit qu'on peut apprendre un modèle et fabriquer une Materia.</td></tr>
+        <tr><td><code>MateriaSource</code></td><td>concrète</td><td><code>IMateriaSource</code></td><td>Le vrai livre de recettes : il garde jusqu'à 4 modèles et fabrique des copies neuves à partir d'un mot (<code>"ice"</code>).</td></tr>
+      </tbody>
+    </table></div>
+    <p><b>Les 3 genres de classes :</b></p>
+    <ul>
+      <li><b>Interface</b> : que des fonctions <code>= 0</code>. Un <code>.hpp</code> seul. Impossible à créer avec <code>new</code>.</li>
+      <li><b>Classe abstraite</b> : au moins une fonction <code>= 0</code>, mais aussi des attributs et du code. Un <code>.hpp</code> et un <code>.cpp</code>. Impossible à créer avec <code>new</code>.</li>
+      <li><b>Classe concrète</b> : une classe qu'on <b>peut créer</b> avec <code>new</code>. Toutes ses fonctions ont du code, il n'y a plus aucun <code>= 0</code>. Un <code>.hpp</code> et un <code>.cpp</code>. Comme dans l'ex02 : <code>AAnimal</code> abstraite, <code>Dog</code> et <code>Cat</code> concrètes.</li>
+    </ul>
+    <p class="tip">Les classes vont par paires : <code>ICharacter</code> → <code>Character</code>, <code>IMateriaSource</code> → <code>MateriaSource</code>, <code>AMateria</code> → <code>Ice</code> et <code>Cure</code>. Le contrat (ou le moule) d'un côté, le vrai objet de l'autre.</p>
+
+    <div class="diagram">
+      <svg viewBox="0 0 720 360" role="img" aria-label="Carte des classes de l'ex03">
+        <defs>
+          <marker id="tri" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head"/></marker>
+          <marker id="tri2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head2"/></marker>
+          <marker id="tri3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head3"/></marker>
+        </defs>
+        <rect x="20" y="20" width="200" height="62" rx="8" class="d-iface"/>
+        <text x="120" y="47" text-anchor="middle" class="d-t">ICharacter</text>
+        <text x="120" y="67" text-anchor="middle" class="d-s">interface · .hpp seul</text>
+        <rect x="500" y="20" width="200" height="62" rx="8" class="d-iface"/>
+        <text x="600" y="47" text-anchor="middle" class="d-t">IMateriaSource</text>
+        <text x="600" y="67" text-anchor="middle" class="d-s">interface · .hpp seul</text>
+        <rect x="260" y="140" width="200" height="62" rx="8" class="d-abs"/>
+        <text x="360" y="167" text-anchor="middle" class="d-t">AMateria</text>
+        <text x="360" y="187" text-anchor="middle" class="d-s">abstraite : clone() = 0</text>
+        <rect x="20" y="150" width="200" height="62" rx="8" class="d-con"/>
+        <text x="120" y="177" text-anchor="middle" class="d-t">Character</text>
+        <text x="120" y="197" text-anchor="middle" class="d-s">AMateria* _inventory[4]</text>
+        <rect x="500" y="150" width="200" height="62" rx="8" class="d-con"/>
+        <text x="600" y="177" text-anchor="middle" class="d-t">MateriaSource</text>
+        <text x="600" y="197" text-anchor="middle" class="d-s">AMateria* _templates[4]</text>
+        <rect x="200" y="280" width="140" height="56" rx="8" class="d-con"/>
+        <text x="270" y="304" text-anchor="middle" class="d-t">Ice</text>
+        <text x="270" y="323" text-anchor="middle" class="d-s">type "ice"</text>
+        <rect x="380" y="280" width="140" height="56" rx="8" class="d-con"/>
+        <text x="450" y="304" text-anchor="middle" class="d-t">Cure</text>
+        <text x="450" y="323" text-anchor="middle" class="d-s">type "cure"</text>
+        <path d="M120 150 V84" class="d-arrow" marker-end="url(#tri)"/>
+        <path d="M600 150 V84" class="d-arrow" marker-end="url(#tri)"/>
+        <path d="M270 280 V242 H340 V204" class="d-arrow" marker-end="url(#tri)"/>
+        <path d="M450 280 V242 H380 V204" class="d-arrow" marker-end="url(#tri)"/>
+        <path d="M220 181 H258" class="d-has" marker-end="url(#tri2)"/>
+        <path d="M500 181 H462" class="d-has" marker-end="url(#tri2)"/>
+        <path d="M300 140 C 300 100, 250 70, 222 58" class="d-has" marker-end="url(#tri2)"/>
+        <text x="292" y="100" class="d-s">use(ICharacter&amp;)</text>
+      </svg>
+    </div>
+    <div class="legend"><span class="lg-i">Interface</span><span class="lg-a">Classe abstraite</span><span class="lg-c">Classe concrète</span><span>→ plein gris : « hérite de »</span><span>→ pointillé bleu : « contient / utilise »</span></div>
+
+    <details class="q"><summary>Question de vérif : quelle est la différence entre MateriaSource et IMateriaSource ?</summary><div>IMateriaSource est le contrat (une interface, un <code>.hpp</code> seul). MateriaSource est le vrai livre qui hérite de ce contrat et écrit le code de <code>learnMateria</code> et <code>createMateria</code> (un <code>.hpp</code> et un <code>.cpp</code>).</div></details>
+
+    <ul class="checks">
+      <li class="ttl">Je coche quand c'est compris</li>
+      <li><label><input type="checkbox" id="k1a"><span>Je sais dire le rôle de chacune des 7 classes, en une phrase</span></label></li>
+      <li><label><input type="checkbox" id="k1b"><span>Je sais lire la carte : qui hérite de qui</span></label></li>
+    </ul>
+  </section>
+
+  <!-- PHASE 2 -->
+  <section id="p2">
+    <div class="phase-head"><span class="num done">2</span><div><span class="eyebrow">Phase 2 · 20 min</span><h2>Le main du sujet, lu comme une histoire</h2></div></div>
+    <p>Ce main est le premier test que le correcteur lancera. On le lit bloc par bloc. La version annotée ligne par ligne est <a href="#cahier">à la fin de la page</a>.</p>
+
+    <div class="card">
+      <h3>Bloc 1. On crée le livre de recettes</h3>
+      <pre><code>IMateriaSource* src = new MateriaSource();
+src-&gt;learnMateria(new Ice());
+src-&gt;learnMateria(new Cure());</code></pre>
+      <p>La 1re ligne a 3 morceaux :</p>
+      <pre><code>IMateriaSource*    src    =    new MateriaSource();
+  (1) l'étiquette  (2) le nom     (3) le vrai objet</code></pre>
+      <ul>
+        <li><b>(1)</b> <code>IMateriaSource*</code> : le genre de chose qu'on tient, « un livre de recettes, n'importe lequel ». C'est le contrat.</li>
+        <li><b>(2)</b> <code>src</code> : le nom de la variable, pour « source ». Tu pourrais l'appeler <code>livre</code>.</li>
+        <li><b>(3)</b> <code>new MateriaSource()</code> : le vrai livre, créé vide en mémoire.</li>
+      </ul>
+      <p>C'est la même idée que <code>const AAnimal* j = new Dog();</code> dans ton ex02 : l'étiquette dit « animal », le vrai objet est un Dog.</p>
+      <p>Les 2 lignes suivantes apprennent 2 modèles au livre : un Ice et un Cure.</p>
+      <p class="why">ces 2 objets appartiennent maintenant au livre. C'est lui qui devra les <code>delete</code>.</p>
+    </div>
+
+    <div class="card">
+      <h3>Bloc 2. On crée un héros et on lui donne des sorts</h3>
+      <pre><code>ICharacter* me = new Character("me");
+
+AMateria* tmp;
+tmp = src-&gt;createMateria("ice");
+me-&gt;equip(tmp);
+tmp = src-&gt;createMateria("cure");
+me-&gt;equip(tmp);</code></pre>
+      <ul>
+        <li>On crée un héros appelé « me », avec un sac vide.</li>
+        <li><code>createMateria("ice")</code> : le livre cherche son modèle « ice » et renvoie <b>une copie neuve</b>, grâce à <code>clone()</code>.</li>
+        <li><code>tmp</code> est juste une main qui tient la Materia une seconde, le temps de la donner au héros.</li>
+        <li><code>equip(tmp)</code> : le héros la range dans le slot 0. Puis Cure va dans le slot 1.</li>
+      </ul>
+      <p class="why">ces 2 copies appartiennent maintenant au héros. C'est lui qui devra les <code>delete</code>.</p>
+    </div>
+
+    <div class="card">
+      <h3>Bloc 3. On crée une cible et on lance les sorts</h3>
+      <pre><code>ICharacter* bob = new Character("bob");
+
+me-&gt;use(0, *bob);
+me-&gt;use(1, *bob);</code></pre>
+      <ul>
+        <li>On crée un 2ᵉ personnage, « bob ». Il sert juste de cible.</li>
+        <li><code>use(0, *bob)</code> : « me » lance le sort du slot 0 (Ice) sur bob.</li>
+        <li><code>use(1, *bob)</code> : il lance le sort du slot 1 (Cure) sur bob.</li>
+        <li><code>*bob</code> veut dire « l'objet bob lui-même », pas son adresse. C'est parce que <code>use</code> attend une <b>référence</b> (<code>ICharacter&amp;</code>).</li>
+      </ul>
+      <p>Résultat attendu. Avec <code>| cat -e</code>, le <code>$</code> marque la fin de chaque ligne :</p>
+      <pre><code>* shoots an ice bolt at bob *$
+* heals bob's wounds *$</code></pre>
+    </div>
+
+    <div class="card">
+      <h3>Bloc 4. On range tout</h3>
+      <pre><code>delete bob;
+delete me;
+delete src;</code></pre>
+      <ul>
+        <li><code>delete me</code> : son destructeur doit supprimer les Materias de son sac.</li>
+        <li><code>delete src</code> : son destructeur doit supprimer ses modèles.</li>
+      </ul>
+      <p class="why">si chaque destructeur fait bien son travail, valgrind affiche zéro fuite.</p>
+    </div>
+
+    <div class="card">
+      <h3>Pourquoi <code>ICharacter*</code> et pas <code>Character*</code> ?</h3>
+      <p>Le main ne connaît que les <b>interfaces</b>. Il sait ce qu'un personnage <i>peut faire</i>, pas comment c'est codé. C'est exactement le but de l'exo.</p>
+    </div>
+
+    <details class="q"><summary>Question de vérif : à la fin du bloc 2, combien d'objets possède « me », et qui les a fabriqués ?</summary><div>2 Materias : un Ice dans le slot 0 et un Cure dans le slot 1. Ce sont des copies fabriquées par le livre (<code>createMateria</code>, qui appelle <code>clone()</code>).</div></details>
+
+    <ul class="checks">
+      <li class="ttl">Je coche quand c'est compris</li>
+      <li><label><input type="checkbox" id="k2a"><span>Je sais expliquer chaque bloc avec mes mots</span></label></li>
+      <li><label><input type="checkbox" id="k2b"><span>Je sais qui possède quel objet à la fin du main</span></label></li>
+    </ul>
+  </section>
+
+  <!-- PHASE 3 -->
+  <section id="p3">
+    <div class="phase-head"><span class="num done">3</span><div><span class="eyebrow">Phase 3 · 2 h</span><h2>Les notions à connaître</h2></div></div>
+    <p>D'abord 6 bases du C++ qui servent partout. Ensuite 8 notions propres à ce module. Lis-en une, réponds à sa question de vérif, puis passe à la suivante.</p>
+
+    <p class="group">A. Les bases du C++ utiles ici</p>
+
+    <div class="card">
+      <h3><span class="k">A1</span>Le <code>.hpp</code> et le <code>.cpp</code></h3>
+      <p>Chaque classe est en général coupée en 2 fichiers :</p>
+      <ul>
+        <li><b><code>.hpp</code> = la carte d'identité</b> (on dit aussi <i>fichier d'en-tête</i>). Il dit <i>ce que la classe a</i> : ses attributs et la liste de ses fonctions. C'est la <b>déclaration</b>.</li>
+        <li><b><code>.cpp</code> = le travail</b> (on dit aussi <i>fichier source</i>). Il dit <i>comment</i> chaque fonction marche. C'est la <b>définition</b>.</li>
+      </ul>
+      <p>Exemple avec <code>getType()</code> de l'exercice :</p>
+      <pre><code>// AMateria.hpp : la déclaration
+class AMateria {
+    protected:
+        std::string _type;
+    public:
+        std::string const &amp; getType() const;   // juste la signature, avec un ;
+};
+
+// AMateria.cpp : la définition
+#include "AMateria.hpp"
+std::string const &amp; AMateria::getType() const {   // AMateria:: = "la fonction de la classe AMateria"
+    return _type;
+}</code></pre>
+      <p>Une classe <b>sans aucun code à écrire</b> n'a besoin que d'un <code>.hpp</code>. C'est le cas des interfaces (voir B3). Toutes les autres classes ont un <code>.hpp</code> <b>et</b> un <code>.cpp</code>.</p>
+      <p class="alert">écrire le corps d'une fonction dans un <code>.hpp</code> (sauf les <code>{}</code> imposés dans les 2 interfaces du sujet).</p>
+      <details class="q"><summary>Question de vérif : MateriaSource a-t-elle besoin d'un .hpp, d'un .cpp, ou des deux ?</summary><div>Des deux. C'est une classe concrète : son <code>.hpp</code> déclare ses attributs et ses fonctions, son <code>.cpp</code> écrit le code de <code>learnMateria</code>, <code>createMateria</code>, etc.</div></details>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">A2</span>Les gardes d'inclusion</h3>
+      <p>Chaque <code>.hpp</code> commence et finit comme ça :</p>
+      <pre><code>#ifndef ICE_HPP
+# define ICE_HPP
+// ... le contenu ...
+#endif</code></pre>
+      <p>Ça veut dire : « si ce fichier a déjà été lu, ne le relis pas ».</p>
+      <p class="why">dans l'ex03, beaucoup de fichiers s'incluent entre eux. Sans gardes, une classe serait déclarée 2 fois : erreur de compilation.</p>
+      <details class="q"><summary>Question de vérif : que se passe-t-il si Ice.hpp et Cure.hpp incluent tous les deux AMateria.hpp, sans gardes ?</summary><div>Si le main inclut Ice.hpp et Cure.hpp, la classe AMateria est lue deux fois : erreur « redefinition of class AMateria ». Avec les gardes, la 2ᵉ lecture est sautée.</div></details>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">A3</span>La forme canonique et la règle des trois</h3>
+      <p>À 42, chaque classe concrète ou abstraite doit avoir ces 4 fonctions :</p>
+      <ol>
+        <li>un constructeur par défaut ;</li>
+        <li>un constructeur de copie ;</li>
+        <li>un opérateur d'affectation <code>operator=</code> ;</li>
+        <li>un destructeur.</li>
+      </ol>
+      <p>Ici : <code>AMateria</code>, <code>Ice</code>, <code>Cure</code>, <code>Character</code> et <code>MateriaSource</code>. Les <b>interfaces</b> sont recopiées telles quelles depuis le sujet : on n'y ajoute rien.</p>
+      <p><b>La règle des trois</b> (les pros en parlent) : si une classe possède de la mémoire créée avec <code>new</code>, son destructeur, son constructeur de copie et son <code>operator=</code> doivent <b>tous les trois</b> s'en occuper. C'est le cas de <code>Character</code> et <code>MateriaSource</code>.</p>
+      <p class="tip">fais le destructeur <code>virtual</code> dans toute classe mère. Sinon, un <code>delete</code> via un pointeur de la mère n'appelle pas le destructeur de la fille.</p>
+      <details class="q"><summary>Question de vérif : pourquoi Ice n'a pas besoin de la règle des trois, alors que Character oui ?</summary><div>Ice ne possède aucun objet créé avec <code>new</code> (juste un texte). Character possède 4 Materias créées avec <code>new</code> : il doit les copier et les libérer lui-même.</div></details>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">A4</span>Le mot <code>const</code></h3>
+      <pre><code>std::string const &amp; getType() const;</code></pre>
+      <ul>
+        <li>Le <code>const</code> <b>du début</b> (<code>std::string const &amp;</code>) : on renvoie le texte en lecture seule, sans le copier.</li>
+        <li>Le <code>const</code> <b>de la fin</b> : cette fonction promet de ne rien modifier dans l'objet.</li>
+      </ul>
+      <p>Mets <code>const</code> partout où c'est possible : une fonction qui ne fait que lire (<code>getType</code>, <code>getName</code>, <code>clone</code>) doit l'avoir.</p>
+      <p class="trap">le <code>const</code> de la fin fait partie du « nom complet » de la fonction. Si tu l'oublies dans une classe fille, ce n'est plus la même fonction (voir B1).</p>
+      <details class="q"><summary>Question de vérif : pourquoi clone() est const ?</summary><div>Parce que se photocopier ne modifie pas l'original. <code>clone()</code> lit l'objet et en crée un nouveau, sans toucher à lui-même.</div></details>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">A5</span><code>NULL</code> et le tableau de pointeurs</h3>
+      <p>Le sac du héros est un <b>tableau de 4 pointeurs</b>. Chaque case contient une adresse, ou <code>NULL</code> si elle est vide.</p>
+      <pre><code>AMateria* _inventory[4];</code></pre>
+      <div class="diagram">
+        <svg viewBox="0 0 640 240" role="img" aria-label="Schéma mémoire du sac de Character">
+          <defs><marker id="pa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="d-head2"/></marker></defs>
+          <rect x="20" y="16" width="600" height="112" rx="10" class="d-plain"/>
+          <text x="36" y="40" class="d-t">Character « me »</text>
+          <text x="210" y="40" class="d-s">_name = "me"     _inventory[4] :</text>
+          <rect x="50" y="60" width="120" height="50" rx="6" class="d-stack"/><text x="110" y="80" text-anchor="middle" class="d-s">[0]</text><text x="110" y="99" text-anchor="middle" class="d-m">0x100</text>
+          <rect x="190" y="60" width="120" height="50" rx="6" class="d-stack"/><text x="250" y="80" text-anchor="middle" class="d-s">[1]</text><text x="250" y="99" text-anchor="middle" class="d-m">0x200</text>
+          <rect x="330" y="60" width="120" height="50" rx="6" class="d-null"/><text x="390" y="80" text-anchor="middle" class="d-s">[2]</text><text x="390" y="99" text-anchor="middle" class="d-m">NULL</text>
+          <rect x="470" y="60" width="120" height="50" rx="6" class="d-null"/><text x="530" y="80" text-anchor="middle" class="d-s">[3]</text><text x="530" y="99" text-anchor="middle" class="d-m">NULL</text>
+          <path d="M110 110 V170" class="d-ptr" marker-end="url(#pa)"/>
+          <path d="M250 110 V170" class="d-ptr" marker-end="url(#pa)"/>
+          <rect x="50" y="172" width="120" height="50" rx="6" class="d-con"/><text x="110" y="194" text-anchor="middle" class="d-t">Ice</text><text x="110" y="212" text-anchor="middle" class="d-s">à l'adresse 0x100</text>
+          <rect x="190" y="172" width="120" height="50" rx="6" class="d-con"/><text x="250" y="194" text-anchor="middle" class="d-t">Cure</text><text x="250" y="212" text-anchor="middle" class="d-s">à l'adresse 0x200</text>
+          <text x="340" y="200" class="d-s">Les cases vides contiennent NULL :</text>
+          <text x="340" y="216" class="d-s">elles ne pointent vers rien.</text>
+        </svg>
+      </div>
+      <ul>
+        <li>En C++98, on écrit <code>NULL</code> (<code>nullptr</code> n'existe pas encore).</li>
+        <li>Au départ, les cases contiennent n'importe quoi. Il faut les mettre à <code>NULL</code> dans le constructeur, avec une boucle.</li>
+        <li>Pour savoir si une case est vide : <code>if (_inventory[i] == NULL)</code>.</li>
+      </ul>
+      <p class="tip"><code>delete NULL;</code> ne fait rien et ne plante pas. Tu peux donc faire <code>delete</code> sur les 4 cases sans tester si elles sont vides.</p>
+      <details class="q"><summary>Question de vérif : que se passe-t-il si tu oublies de mettre les cases à NULL dans le constructeur ?</summary><div>Elles contiennent des adresses au hasard. <code>equip</code> croira que le sac est plein, et le destructeur fera <code>delete</code> sur des adresses au hasard : crash.</div></details>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">A6</span>L'objet ou son adresse : avec ou sans <code>*</code></h3>
+      <ul>
+        <li><code>IMateriaSource src;</code> = créer <b>un objet</b> de ce type. ❌ Ne compile pas : une interface ne peut pas être créée.</li>
+        <li><code>IMateriaSource* src;</code> = une variable qui contient <b>l'adresse</b> d'un objet. ✅ On y met l'adresse d'un vrai livre : <code>src = new MateriaSource();</code></li>
+      </ul>
+      <div class="diagram">
+        <svg viewBox="0 0 640 170" role="img" aria-label="Schéma mémoire : une variable pointeur et l'objet qu'elle désigne">
+          <defs><marker id="pb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="d-head2"/></marker></defs>
+          <rect x="10" y="10" width="270" height="150" rx="10" class="d-zone"/>
+          <rect x="320" y="10" width="310" height="150" rx="10" class="d-zone"/>
+          <text x="24" y="34" class="d-s">LA PILE : tes variables</text>
+          <text x="334" y="34" class="d-s">LE TAS : les objets créés avec new</text>
+          <rect x="50" y="62" width="190" height="64" rx="6" class="d-stack"/>
+          <text x="145" y="86" text-anchor="middle" class="d-m">IMateriaSource* src</text>
+          <text x="145" y="110" text-anchor="middle" class="d-m">contient 0x5000</text>
+          <path d="M240 94 H368" class="d-ptr" marker-end="url(#pb)"/>
+          <rect x="370" y="56" width="230" height="76" rx="6" class="d-con"/>
+          <text x="485" y="86" text-anchor="middle" class="d-t">MateriaSource</text>
+          <text x="485" y="110" text-anchor="middle" class="d-s">le vrai livre, à l'adresse 0x5000</text>
+        </svg>
+      </div>
+      <p>Image : sans <code>*</code>, c'est la maison. Avec <code>*</code>, c'est un papier avec l'adresse de la maison.</p>
+      <div class="tbl"><table>
+        <thead><tr><th></th><th><code>Character me("me");</code></th><th><code>Character* me = new Character("me");</code></th></tr></thead>
+        <tbody>
+          <tr><td>C'est quoi</td><td>l'objet lui-même</td><td>l'adresse d'un objet</td></tr>
+          <tr><td>Appeler une fonction</td><td><code>me.equip(...)</code> (point)</td><td><code>me-&gt;equip(...)</code> (flèche)</td></tr>
+          <tr><td>Destruction</td><td>automatique, à la fin du bloc <code>{ }</code></td><td>toi, avec <code>delete me;</code></td></tr>
+        </tbody>
+      </table></div>
+      <p class="why">le pointeur est la seule façon de tenir un objet via son interface (<code>ICharacter*</code>) ou sa classe abstraite (<code>AMateria*</code>). C'est ce qui permet le polymorphisme.</p>
+      <details class="q"><summary>Question de vérif : dans le main, pourquoi écrit-on me-&gt;use(...) et pas me.use(...) ?</summary><div>Parce que <code>me</code> est un pointeur (<code>ICharacter*</code>). La flèche veut dire « va à l'adresse, puis appelle la fonction ».</div></details>
+    </div>
+
+    <p class="group">B. Les notions du module</p>
+
+    <div class="card">
+      <h3><span class="k">B1</span><code>virtual</code> et la redéfinition (rappel ex00)</h3>
+      <p>Une fonction <code>virtual</code> dans la mère peut être <b>redéfinie</b> dans la fille. Avec un pointeur de la mère, le programme appelle la version de la fille. C'est le <b>polymorphisme</b>.</p>
+      <p>Pour redéfinir, la fille redéclare la fonction avec <b>exactement</b> la même signature : même nom, mêmes paramètres, même <code>const</code>.</p>
+      <pre><code>// dans AMateria.hpp : virtual void use(ICharacter&amp; target);
+// dans Ice.hpp :      void use(ICharacter&amp; target);   ← identique</code></pre>
+      <p>Dans l'exo : le slot du sac est un <code>AMateria*</code>. Pourtant, <code>_inventory[0]-&gt;use(bob)</code> appelle <code>Ice::use</code>, car l'objet est vraiment un Ice.</p>
+      <p class="trap">une petite différence (un <code>const</code> en trop ou en moins, un <code>&amp;</code> oublié) crée une <b>nouvelle</b> fonction au lieu de remplacer l'ancienne.</p>
+      <details class="q"><summary>Question de vérif : si use n'était pas virtual dans AMateria, que ferait _inventory[0]-&gt;use(bob) ?</summary><div>Il appellerait <code>AMateria::use</code>, qui ne fait rien. Rien ne s'afficherait, car le programme regarderait le type du pointeur (AMateria) au lieu du vrai objet (Ice).</div></details>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">B2</span>La classe abstraite (rappel ex02)</h3>
+      <p>Une classe avec au moins une fonction <code>= 0</code> est abstraite. On ne peut pas la créer seule. Elle peut avoir des attributs et du code normal.</p>
+      <p>Ici, <code>AMateria</code> est abstraite grâce à <code>clone() const = 0</code>. Elle garde un attribut <code>protected</code> pour le type : la fiche d'évaluation le vérifie.</p>
+      <p><code>protected</code> veut dire : invisible depuis le main, mais visible depuis les filles (Ice et Cure).</p>
+      <p class="why">on ne doit jamais pouvoir créer une Materia « générique », seulement un Ice ou un Cure.</p>
+      <details class="q"><summary>Question de vérif : AMateria a un .cpp. Pourquoi, alors qu'elle est abstraite ?</summary><div>Parce qu'elle a du vrai code : ses constructeurs, <code>getType()</code>, <code>use()</code>, son destructeur. Seule <code>clone()</code> n'a pas de code (elle est <code>= 0</code>).</div></details>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">B3</span>L'interface</h3>
+      <p>Le C++ n'a pas de mot-clé « interface ». On appelle interface une classe qui ne contient <b>que</b> :</p>
+      <ul>
+        <li>des fonctions virtuelles pures (<code>= 0</code>) ;</li>
+        <li>un destructeur virtuel.</li>
+      </ul>
+      <p>Pas d'attribut. Pas de constructeur. Pas de code. Le préfixe <code>I</code> veut dire Interface.</p>
+      <p>Exemple : l'interface <code>ICharacter</code> du sujet.</p>
+      <pre><code>class ICharacter {
+    public:
+        virtual ~ICharacter() {}                              // { } = corps vide, imposé par le sujet
+        virtual std::string const &amp; getName() const = 0;     // pure : pas de corps
+        virtual void equip(AMateria* m) = 0;
+        virtual void unequip(int idx) = 0;
+        virtual void use(int idx, ICharacter&amp; target) = 0;
+};</code></pre>
+      <p><b>Pourquoi pas de <code>.cpp</code> ?</b> Les fonctions <code>= 0</code> n'ont pas de code. Le destructeur a déjà son corps <code>{}</code> dans le <code>.hpp</code>. Il ne reste rien à écrire. Donc <code>ICharacter</code> et <code>IMateriaSource</code> n'ont <b>qu'un <code>.hpp</code></b>.</p>
+      <p><b>« Implémenter une interface »</b> veut dire : hériter d'elle avec <code>public</code>, et écrire <b>toutes</b> ses fonctions <code>= 0</code>.</p>
+      <pre><code>class Character : public ICharacter {
+    public:
+        std::string const &amp; getName() const;   // même signature, sans = 0
+        void equip(AMateria* m);
+        void unequip(int idx);
+        void use(int idx, ICharacter&amp; target);
+        // déclarées dans Character.hpp, écrites dans Character.cpp
+};</code></pre>
+      <div class="tbl"><table>
+        <thead><tr><th></th><th>Classe abstraite (AMateria)</th><th>Interface (ICharacter)</th></tr></thead>
+        <tbody>
+          <tr><td>Fonctions <code>= 0</code></td><td>au moins une</td><td>toutes</td></tr>
+          <tr><td>Attributs</td><td>oui</td><td>non</td></tr>
+          <tr><td>Fichiers</td><td><code>.hpp</code> + <code>.cpp</code></td><td><code>.hpp</code> seul</td></tr>
+          <tr><td>Préfixe</td><td><code>A</code></td><td><code>I</code></td></tr>
+          <tr><td>On peut la créer avec <code>new</code></td><td>non</td><td>non</td></tr>
+          <tr><td>Ce que la fille reçoit déjà prêt</td><td>l'attribut <code>_type</code> et <code>getType()</code></td><td>rien : elle écrit tout</td></tr>
+        </tbody>
+      </table></div>
+      <p><b>À quoi sert une interface, si on réécrit tout dans la classe concrète ?</b></p>
+      <ul>
+        <li>C'est un <b>contrat</b> : si <code>MateriaSource</code> oublie <code>createMateria</code>, ça ne compile pas.</li>
+        <li>Celui qui l'utilise <b>ne dépend que du contrat</b>. Le main ne parle que d'<code>IMateriaSource</code>. Pour changer de livre un jour, on changerait une seule ligne.</li>
+        <li><code>Ice::use(ICharacter&amp; target)</code> peut viser n'importe quel personnage, sans le connaître. Il appelle juste <code>target.getName()</code>.</li>
+      </ul>
+      <p>Image : la prise électrique (l'interface) accepte n'importe quel appareil (classe concrète) qui a la bonne forme.</p>
+      <details class="q"><summary>Question de vérif : Character peut-il oublier d'écrire unequip ?</summary><div>Non. <code>unequip</code> est <code>= 0</code> dans ICharacter. Si Character ne l'écrit pas, Character reste abstraite et <code>new Character("me")</code> ne compile plus (erreur « abstract type »).</div></details>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">B4</span><code>clone()</code> : la photocopieuse</h3>
+      <p>Tu as un <code>AMateria*</code> dans la main. Tu veux une copie. Mais <b>toi</b>, tu ne sais pas si c'est un Ice ou un Cure.</p>
+      <ul>
+        <li><code>new AMateria(*m)</code> : impossible, AMateria est abstraite.</li>
+        <li><code>new Ice(*m)</code> : faux si c'est un Cure.</li>
+      </ul>
+      <p>Solution : on demande à l'objet de se copier lui-même. <b>Lui</b> connaît son vrai type. Grâce à <code>virtual</code>, <code>m-&gt;clone()</code> appelle la bonne version.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 640 190" role="img" aria-label="Schéma mémoire de clone : un nouvel Ice est créé à une autre adresse">
+          <defs><marker id="pc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="d-head2"/></marker></defs>
+          <rect x="20" y="70" width="150" height="56" rx="6" class="d-stack"/>
+          <text x="95" y="93" text-anchor="middle" class="d-m">AMateria* m</text>
+          <text x="95" y="113" text-anchor="middle" class="d-m">= 0x100</text>
+          <path d="M170 98 H226" class="d-ptr" marker-end="url(#pc)"/>
+          <rect x="228" y="62" width="160" height="72" rx="6" class="d-con"/>
+          <text x="308" y="88" text-anchor="middle" class="d-t">Ice (l'original)</text>
+          <text x="308" y="108" text-anchor="middle" class="d-s">adresse 0x100</text>
+          <text x="308" y="124" text-anchor="middle" class="d-s">_type = "ice"</text>
+          <path d="M388 98 H446" class="d-arrow" stroke-dasharray="5 4" marker-end="url(#pc)"/>
+          <text x="417" y="40" text-anchor="middle" class="d-m">m-&gt;clone()</text>
+          <text x="417" y="56" text-anchor="middle" class="d-s">= new Ice(*this)</text>
+          <rect x="448" y="62" width="172" height="72" rx="6" class="d-con"/>
+          <text x="534" y="88" text-anchor="middle" class="d-t">Ice (la copie)</text>
+          <text x="534" y="108" text-anchor="middle" class="d-s">NOUVELLE adresse 0x200</text>
+          <text x="534" y="124" text-anchor="middle" class="d-s">_type = "ice"</text>
+          <text x="20" y="170" class="d-s">clone() renvoie 0x200. Il y a maintenant 2 objets : 2 delete à prévoir.</text>
+        </svg>
+      </div>
+      <p class="why">MateriaSource s'en sert pour fabriquer des sorts à partir de ses modèles. Character s'en sert pour la copie profonde de son sac.</p>
+      <p class="trap"><code>clone()</code> fait un <code>new</code>. Donc quelqu'un devra faire le <code>delete</code> correspondant.</p>
+      <details class="q"><summary>Question de vérif : pourquoi clone() est = 0 dans AMateria ?</summary><div>Parce qu'AMateria ne sait pas quel objet fabriquer : elle ne connaît pas le vrai type. Seuls Ice et Cure le savent. Donc chaque fille doit écrire sa propre version.</div></details>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">B5</span>La déclaration anticipée (<i>forward declaration</i>)</h3>
+      <p><code>AMateria</code> parle de <code>ICharacter</code> (dans <code>use</code>). <code>ICharacter</code> parle de <code>AMateria</code> (dans <code>equip</code>). Si chaque <code>.hpp</code> inclut l'autre, ils tournent en rond : erreur <code>'AMateria' has not been declared</code>.</p>
+      <p>Solution : au lieu d'inclure, on écrit juste une ligne à part :</p>
+      <pre><code>class ICharacter;   // PAS un include : une annonce "ce nom existe"</code></pre>
+      <div class="tbl"><table>
+        <thead><tr><th></th><th><code>#include "ICharacter.hpp"</code></th><th><code>class ICharacter;</code></th></tr></thead>
+        <tbody>
+          <tr><td>Ce que ça fait</td><td>copie-colle <b>tout</b> le fichier ici</td><td>donne <b>juste le nom</b></td></tr>
+          <tr><td>Image</td><td>photocopier tout le livre</td><td>écrire le titre sur une étiquette</td></tr>
+          <tr><td>Ce n'est pas</td><td>—</td><td>une 2ᵉ classe : il n'y a pas de <code>{ }</code></td></tr>
+        </tbody>
+      </table></div>
+      <p><b>La règle simple :</b></p>
+      <div class="tbl"><table>
+        <thead><tr><th>Ce que tu fais avec la classe</th><th>Ce qu'il faut en haut du fichier</th></tr></thead>
+        <tbody>
+          <tr><td>seulement un <code>*</code> ou un <code>&amp;</code></td><td><code>class NomDeLaClasse;</code></td></tr>
+          <tr><td>appeler une de ses fonctions (<code>target.getName()</code>)</td><td><code>#include "NomDeLaClasse.hpp"</code>, dans le <code>.cpp</code></td></tr>
+          <tr><td>hériter (<code>: public ...</code>)</td><td><code>#include "NomDeLaClasse.hpp"</code></td></tr>
+        </tbody>
+      </table></div>
+      <p>Le tableau complet « qui inclut quoi » est dans la phase 5.</p>
+      <details class="q"><summary>Question de vérif : Ice.cpp appelle target.getName(). Que doit-il inclure ?</summary><div>Le vrai <code>#include "ICharacter.hpp"</code>. Pour appeler une fonction, le compilateur doit savoir qu'elle existe, donc il lui faut tout le contenu de la classe.</div></details>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">B6</span>La copie profonde (rappel ex01)</h3>
+      <p>Copier un Character, ce n'est pas copier les 4 adresses. Sinon, deux héros partagent les mêmes Materias.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 640 330" role="img" aria-label="Schéma mémoire : copie superficielle contre copie profonde">
+          <defs>
+            <marker id="pd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="d-head2"/></marker>
+            <marker id="pe" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="d-head3"/></marker>
+          </defs>
+          <text x="20" y="26" class="d-bad">FAUX : copie superficielle (on copie l'adresse)</text>
+          <rect x="20" y="42" width="190" height="44" rx="6" class="d-stack"/><text x="115" y="69" text-anchor="middle" class="d-m">me._inventory[0] = 0x100</text>
+          <rect x="20" y="100" width="190" height="44" rx="6" class="d-stack"/><text x="115" y="127" text-anchor="middle" class="d-m">copie._inventory[0] = 0x100</text>
+          <path d="M210 64 C 270 64, 280 88, 326 92" class="d-ptr-bad" marker-end="url(#pe)"/>
+          <path d="M210 122 C 270 122, 280 100, 326 98" class="d-ptr-bad" marker-end="url(#pe)"/>
+          <rect x="328" y="70" width="140" height="50" rx="6" class="d-con"/><text x="398" y="92" text-anchor="middle" class="d-t">Ice</text><text x="398" y="110" text-anchor="middle" class="d-s">0x100 (un seul !)</text>
+          <text x="484" y="88" class="d-bad">2 delete sur</text>
+          <text x="484" y="106" class="d-bad">le même Ice : crash</text>
+
+          <text x="20" y="190" class="d-ok">JUSTE : copie profonde (on clone l'objet)</text>
+          <rect x="20" y="206" width="190" height="44" rx="6" class="d-stack"/><text x="115" y="233" text-anchor="middle" class="d-m">me._inventory[0] = 0x100</text>
+          <rect x="20" y="268" width="190" height="44" rx="6" class="d-stack"/><text x="115" y="295" text-anchor="middle" class="d-m">copie._inventory[0] = 0x300</text>
+          <path d="M210 228 H326" class="d-ptr" marker-end="url(#pd)"/>
+          <path d="M210 290 H326" class="d-ptr" marker-end="url(#pd)"/>
+          <rect x="328" y="204" width="140" height="48" rx="6" class="d-con"/><text x="398" y="225" text-anchor="middle" class="d-t">Ice</text><text x="398" y="242" text-anchor="middle" class="d-s">0x100</text>
+          <rect x="328" y="266" width="140" height="48" rx="6" class="d-con"/><text x="398" y="287" text-anchor="middle" class="d-t">Ice (clone)</text><text x="398" y="304" text-anchor="middle" class="d-s">0x300</text>
+          <text x="484" y="252" class="d-ok">Chacun le sien :</text>
+          <text x="484" y="270" class="d-ok">chacun son delete</text>
+        </svg>
+      </div>
+      <p>Dans <code>operator=</code>, le sujet impose cet ordre :</p>
+      <ol>
+        <li>supprimer les Materias que j'ai déjà ;</li>
+        <li>cloner chaque Materia de l'autre.</li>
+      </ol>
+      <p class="why">même idée que le Brain, mais avec <code>clone()</code>, car on ne connaît pas le type des Materias.</p>
+      <details class="q"><summary>Question de vérif : je copie un Character, puis je détruis l'original. La copie marche-t-elle encore ?</summary><div>Oui, si la copie est profonde : la copie a ses propres Materias (clonées), à d'autres adresses. Détruire l'original ne touche pas à ses objets à elle. Avec une copie superficielle, la copie pointerait vers des Materias déjà détruites.</div></details>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">B7</span>Qui fait le <code>delete</code> ?</h3>
+      <p>Règle d'or : <b>chaque <code>new</code> a un seul propriétaire</b>, qui fera le <code>delete</code>.</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Situation</th><th>Propriétaire</th><th>Qui fait <code>delete</code></th></tr></thead>
+        <tbody>
+          <tr><td>Materia donnée à <code>learnMateria</code></td><td>MateriaSource</td><td>Son destructeur (voir le choix en 6.4)</td></tr>
+          <tr><td>Materia créée par <code>createMateria</code></td><td>Celui qui la reçoit</td><td>Le main, ou le Character si elle est équipée</td></tr>
+          <tr><td>Materia équipée</td><td>Character</td><td>Son destructeur (et <code>operator=</code>)</td></tr>
+          <tr><td>Materia déséquipée (« par terre »)</td><td>Plus personne !</td><td>Le main : il garde l'adresse <b>avant</b> <code>unequip</code>, puis fait <code>delete</code></td></tr>
+          <tr><td><code>equip</code> sur un sac plein</td><td>Personne ne la prend</td><td>Le main : dans tes tests, tu sais que le sac est plein</td></tr>
+        </tbody>
+      </table></div>
+      <div class="diagram">
+        <svg viewBox="0 0 640 210" role="img" aria-label="Schéma mémoire de unequip : la Materia reste en mémoire, le main garde son adresse">
+          <defs><marker id="pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="d-head2"/></marker></defs>
+          <text x="20" y="26" class="d-t">Avant unequip(0)</text>
+          <rect x="20" y="50" width="130" height="46" rx="6" class="d-stack"/><text x="85" y="78" text-anchor="middle" class="d-m">slot[0] = 0x100</text>
+          <path d="M150 73 H196" class="d-ptr" marker-end="url(#pf)"/>
+          <rect x="198" y="50" width="100" height="46" rx="6" class="d-con"/><text x="248" y="78" text-anchor="middle" class="d-t">Ice</text>
+          <text x="20" y="130" class="d-s">Le main garde l'adresse AVANT :</text>
+          <text x="20" y="148" class="d-m">AMateria* sol = 0x100;</text>
+
+          <text x="340" y="26" class="d-t">Après unequip(0)</text>
+          <rect x="340" y="50" width="130" height="46" rx="6" class="d-null"/><text x="405" y="78" text-anchor="middle" class="d-m">slot[0] = NULL</text>
+          <rect x="340" y="120" width="130" height="46" rx="6" class="d-stack"/><text x="405" y="148" text-anchor="middle" class="d-m">sol = 0x100</text>
+          <path d="M470 143 H516" class="d-ptr" marker-end="url(#pf)"/>
+          <rect x="518" y="120" width="100" height="46" rx="6" class="d-con"/><text x="568" y="140" text-anchor="middle" class="d-t">Ice</text><text x="568" y="157" text-anchor="middle" class="d-s">par terre</text>
+          <text x="340" y="196" class="d-ok">Puis : delete sol;  →  0 fuite</text>
+        </svg>
+      </div>
+      <p class="tip">pour les Materias par terre, garder l'adresse dans le main est la solution la plus simple. Le sujet te laisse libre, et ta SPEC demande une solution simple.</p>
+      <p class="why">le correcteur lance valgrind. Une fuite = exercice raté.</p>
+      <details class="q"><summary>Question de vérif : pourquoi unequip ne fait pas delete ?</summary><div>Le sujet l'interdit : déséquiper, c'est poser la Materia par terre, pas la détruire. Elle existe toujours en mémoire. C'est au main (qui a gardé son adresse) de la libérer.</div></details>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">B8</span>La composition : « posséder » des objets</h3>
+      <p>Hériter, c'est « <b>être</b> » : un Ice <b>est</b> une AMateria. Composer, c'est « <b>avoir</b> » : un Character <b>a</b> 4 Materias dans son sac.</p>
+      <ul>
+        <li><code>class Ice : public AMateria</code> → héritage (« est un »).</li>
+        <li><code>AMateria* _inventory[4];</code> dans Character → composition (« a des »).</li>
+      </ul>
+      <p class="why">quand une classe <b>possède</b> des objets créés avec <code>new</code>, elle en est responsable : elle les copie (copie profonde) et les détruit (destructeur). C'est la règle des trois (A3).</p>
+      <details class="q"><summary>Question de vérif : MateriaSource est-ce de l'héritage ou de la composition ?</summary><div>Les deux. Elle <b>hérite</b> d'IMateriaSource (elle « est un » livre de recettes) et elle <b>a</b> 4 modèles dans <code>_templates</code> (composition).</div></details>
+    </div>
+
+    <ul class="checks">
+      <li class="ttl">Je coche quand c'est compris</li>
+      <li><label><input type="checkbox" id="k3a"><span>Je sais ce qui va dans un <code>.hpp</code> et dans un <code>.cpp</code></span></label></li>
+      <li><label><input type="checkbox" id="k3b"><span>Je sais pourquoi les interfaces n'ont pas de <code>.cpp</code></span></label></li>
+      <li><label><input type="checkbox" id="k3c"><span>Je sais la différence entre interface, classe abstraite et classe concrète</span></label></li>
+      <li><label><input type="checkbox" id="k3g"><span>Je sais la différence entre un objet et un pointeur (<code>*</code>, <code>-&gt;</code>)</span></label></li>
+      <li><label><input type="checkbox" id="k3d"><span>Je sais à quoi sert <code>clone()</code></span></label></li>
+      <li><label><input type="checkbox" id="k3e"><span>Je sais quand utiliser <code>class X;</code> au lieu d'un <code>#include</code></span></label></li>
+      <li><label><input type="checkbox" id="k3h"><span>Je sais dessiner une copie superficielle et une copie profonde</span></label></li>
+      <li><label><input type="checkbox" id="k3f"><span>Je sais qui fait <code>delete</code> dans chaque cas</span></label></li>
+    </ul>
+  </section>
+
+  <!-- PHASE 4 -->
+  <section id="p4">
+    <div class="phase-head"><span class="num done">4</span><div><span class="eyebrow">Phase 4 · 15 min</span><h2>Créer les fichiers vides</h2></div></div>
+    <p>Tu crées juste les fichiers, <b>sans rien dedans</b>. Ça te donne une vue de tout le projet. Même rangement que tes ex00 à ex02.</p>
+<pre><code>ex03/
+├── Makefile
+├── main.cpp
+├── includes/
+│   ├── ICharacter.hpp        ← interface : PAS de .cpp
+│   ├── IMateriaSource.hpp    ← interface : PAS de .cpp
+│   ├── AMateria.hpp
+│   ├── Ice.hpp
+│   ├── Cure.hpp
+│   ├── Character.hpp
+│   └── MateriaSource.hpp
+├── srcs/
+│   ├── AMateria.cpp
+│   ├── Ice.cpp
+│   ├── Cure.cpp
+│   ├── Character.cpp
+│   └── MateriaSource.cpp
+└── utils/                    (tes couleurs, si tu les gardes)</code></pre>
+    <p>Au total : <b>7 fichiers <code>.hpp</code></b> et <b>5 fichiers <code>.cpp</code></b>, plus <code>main.cpp</code> et le <code>Makefile</code>. C'est exactement la liste de ta SPEC.</p>
+    <ul class="checks">
+      <li class="ttl">À faire</li>
+      <li><label><input type="checkbox" id="k4a" checked><span><code>includes/ICharacter.hpp</code> et <code>includes/IMateriaSource.hpp</code></span></label></li>
+      <li><label><input type="checkbox" id="k4c" checked><span><code>Ice</code> et <code>Cure</code> : <code>.hpp</code> et <code>.cpp</code></span></label></li>
+      <li><label><input type="checkbox" id="k4e" checked><span><code>Character</code> et <code>MateriaSource</code> : <code>.hpp</code> et <code>.cpp</code></span></label></li>
+      <li><label><input type="checkbox" id="k4g" checked><span>Tous les fichiers listés dans le <code>Makefile</code></span></label></li>
+    </ul>
+  </section>
+
+  <!-- PHASE 5 -->
+  <section id="p5">
+    <div class="phase-head"><span class="num now">5</span><div><span class="tag-now">Tu es ici</span><span class="eyebrow">Phase 5 · 1 h 30</span><h2>Écrire le squelette</h2></div></div>
+    <p><b>Le but :</b> écrire la « carcasse » de tout le projet. Les <code>.hpp</code> sont complets. Les <code>.cpp</code> ont toutes les fonctions, mais <b>vides</b>. À la fin, <code>make</code> compile, même si le programme ne fait encore rien.</p>
+    <p class="why">quand le squelette compile, tu sais que la structure est juste. Ensuite, tu peux remplir une fonction à la fois sans tout casser.</p>
+
+    <h3>Étape 5.1 : qui inclut quoi <span class="dur">· 10 min</span></h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Fichier</th><th>Ce qu'il met en haut</th><th>Pourquoi</th></tr></thead>
+      <tbody>
+        <tr><td><code>ICharacter.hpp</code></td><td>la ligne <code>#include &lt;string&gt;</code><br>et la ligne <code>class AMateria;</code> (pas un include)</td><td>il parle seulement de <code>AMateria*</code></td></tr>
+        <tr><td><code>IMateriaSource.hpp</code></td><td>la ligne <code>#include &lt;string&gt;</code><br>et la ligne <code>class AMateria;</code> (pas un include)</td><td>pareil</td></tr>
+        <tr><td><code>AMateria.hpp</code></td><td>la ligne <code>#include &lt;string&gt;</code><br>et la ligne <code>class ICharacter;</code> (pas un include)</td><td>il parle seulement de <code>ICharacter&amp;</code></td></tr>
+        <tr><td><code>Ice.hpp</code>, <code>Cure.hpp</code></td><td><code>#include "AMateria.hpp"</code></td><td>ils héritent d'AMateria</td></tr>
+        <tr><td><code>Character.hpp</code></td><td><code>#include "ICharacter.hpp"</code></td><td>il hérite d'ICharacter</td></tr>
+        <tr><td><code>MateriaSource.hpp</code></td><td><code>#include "IMateriaSource.hpp"</code></td><td>il hérite d'IMateriaSource</td></tr>
+        <tr><td><code>Ice.cpp</code>, <code>Cure.cpp</code></td><td>son <code>.hpp</code> + <code>"ICharacter.hpp"</code> + <code>&lt;iostream&gt;</code></td><td>ils appellent <code>target.getName()</code> et affichent</td></tr>
+        <tr><td><code>AMateria.cpp</code></td><td><code>"AMateria.hpp"</code> + <code>"ICharacter.hpp"</code></td><td>pour <code>use(ICharacter&amp;)</code></td></tr>
+        <tr><td><code>Character.cpp</code></td><td><code>"Character.hpp"</code> + <code>"AMateria.hpp"</code></td><td>il appelle <code>clone()</code>, <code>use()</code>, <code>delete</code></td></tr>
+        <tr><td><code>MateriaSource.cpp</code></td><td><code>"MateriaSource.hpp"</code> + <code>"AMateria.hpp"</code></td><td>il appelle <code>clone()</code>, <code>getType()</code></td></tr>
+        <tr><td><code>main.cpp</code></td><td><code>Ice</code>, <code>Cure</code>, <code>Character</code>, <code>MateriaSource</code> (.hpp)</td><td>il crée ces 4 classes</td></tr>
+      </tbody>
+    </table></div>
+    <p>Exemple : le haut d'<code>AMateria.hpp</code>.</p>
+<pre><code>#ifndef AMATERIA_HPP
+#define AMATERIA_HPP
+
+#include &lt;string&gt;     // un vrai include
+
+class ICharacter;     // PAS un include : "ce nom existe"
+
+class AMateria
+{
+    // ...
+};
+
+#endif</code></pre>
+
+    <h3>Étape 5.2 : écrire les <code>.hpp</code>, dans cet ordre <span class="dur">· 40 min</span></h3>
+    <p>Pour chaque fichier : les gardes d'inclusion, les includes du tableau, puis la classe. Les signatures marquées « sujet » se recopient exactement.</p>
+
+    <div class="file">
+      <span class="file-name">ICharacter.hpp</span>
+      <dl class="kv">
+        <dt>Rôle</dt><dd>Le contrat d'un personnage.</dd>
+        <dt>Contenu</dt><dd>Recopie <b>exactement</b> la classe du sujet (le correcteur compare) :</dd>
+      </dl>
+<pre><code>class ICharacter
+{
+    public:
+        virtual ~ICharacter() {}
+        virtual std::string const &amp; getName() const = 0;
+        virtual void equip(AMateria* m) = 0;
+        virtual void unequip(int idx) = 0;
+        virtual void use(int idx, ICharacter&amp; target) = 0;
+};</code></pre>
+    </div>
+
+    <div class="file">
+      <span class="file-name">IMateriaSource.hpp</span>
+      <dl class="kv">
+        <dt>Rôle</dt><dd>Le contrat d'un livre de recettes.</dd>
+        <dt>Contenu</dt><dd>Recopie <b>exactement</b> la classe du sujet :</dd>
+      </dl>
+<pre><code>class IMateriaSource
+{
+    public:
+        virtual ~IMateriaSource() {}
+        virtual void learnMateria(AMateria*) = 0;
+        virtual AMateria* createMateria(std::string const &amp; type) = 0;
+};</code></pre>
+    </div>
+
+    <div class="file">
+      <span class="file-name">AMateria.hpp</span>
+      <dl class="kv">
+        <dt>Rôle</dt><dd>Le moule commun de tous les sorts.</dd>
+        <dt>Hérite de</dt><dd>personne</dd>
+        <dt>Attribut</dt><dd><code>protected</code> : <code>std::string _type;</code></dd>
+        <dt>Fonctions</dt><dd>
+          <ul>
+            <li>constructeur par défaut</li>
+            <li><code>AMateria(std::string const &amp; type);</code> (sujet)</li>
+            <li>constructeur de copie, <code>operator=</code></li>
+            <li>destructeur <code>virtual</code></li>
+            <li><code>std::string const &amp; getType() const;</code> (sujet)</li>
+            <li><code>virtual AMateria* clone() const = 0;</code> (sujet)</li>
+            <li><code>virtual void use(ICharacter&amp; target);</code> (sujet)</li>
+          </ul>
+        </dd>
+      </dl>
+    </div>
+
+    <div class="file">
+      <span class="file-name">Ice.hpp &nbsp;·&nbsp; Cure.hpp</span>
+      <dl class="kv">
+        <dt>Rôle</dt><dd>Les deux vrais sorts. Cure est une copie d'Ice avec d'autres mots.</dd>
+        <dt>Hérite de</dt><dd><code>public AMateria</code></dd>
+        <dt>Attribut</dt><dd>aucun (le type est déjà dans AMateria)</dd>
+        <dt>Fonctions</dt><dd>
+          <ul>
+            <li>les 4 de la forme canonique</li>
+            <li><code>clone</code> : même signature que dans AMateria, <b>sans</b> <code>= 0</code></li>
+            <li><code>use</code> : même signature que dans AMateria</li>
+          </ul>
+        </dd>
+      </dl>
+    </div>
+
+    <div class="file">
+      <span class="file-name">Character.hpp</span>
+      <dl class="kv">
+        <dt>Rôle</dt><dd>Le héros avec son sac de 4 slots.</dd>
+        <dt>Hérite de</dt><dd><code>public ICharacter</code></dd>
+        <dt>Attributs</dt><dd><code>private</code> : <code>std::string _name;</code> et <code>AMateria* _inventory[4];</code></dd>
+        <dt>Fonctions</dt><dd>
+          <ul>
+            <li>les 4 de la forme canonique</li>
+            <li>un constructeur qui prend le nom : <code>Character(std::string const &amp; name);</code> (sujet)</li>
+            <li>les 4 fonctions d'ICharacter : <code>getName</code>, <code>equip</code>, <code>unequip</code>, <code>use</code>. Même signature, <b>sans</b> <code>= 0</code></li>
+          </ul>
+        </dd>
+      </dl>
+    </div>
+
+    <div class="file">
+      <span class="file-name">MateriaSource.hpp</span>
+      <dl class="kv">
+        <dt>Rôle</dt><dd>Le livre de recettes avec 4 modèles.</dd>
+        <dt>Hérite de</dt><dd><code>public IMateriaSource</code></dd>
+        <dt>Attribut</dt><dd><code>private</code> : <code>AMateria* _templates[4];</code></dd>
+        <dt>Fonctions</dt><dd>
+          <ul>
+            <li>les 4 de la forme canonique</li>
+            <li>les 2 fonctions d'IMateriaSource : <code>learnMateria</code>, <code>createMateria</code>. Même signature, <b>sans</b> <code>= 0</code></li>
+          </ul>
+        </dd>
+      </dl>
+    </div>
+    <p class="alert">un corps de fonction <code>{ ... }</code> dans <code>AMateria.hpp</code>, <code>Ice.hpp</code>, <code>Character.hpp</code>… Dans ces fichiers, chaque fonction finit par un <code>;</code>.</p>
+
+    <h3>Étape 5.3 : écrire les <code>.cpp</code> avec des fonctions vides <span class="dur">· 30 min</span></h3>
+    <p>Dans chaque <code>.cpp</code>, écris <b>toutes</b> les fonctions déclarées dans le <code>.hpp</code>, avec un corps provisoire :</p>
+    <ul>
+      <li>fonction qui renvoie <code>void</code> (ou constructeur, destructeur) → corps vide <code>{ }</code> ;</li>
+      <li><code>getType</code> → <code>return _type;</code> et <code>getName</code> → <code>return _name;</code> ;</li>
+      <li><code>clone</code> et <code>createMateria</code> → <code>return NULL;</code> pour l'instant ;</li>
+      <li><code>operator=</code> → <code>return *this;</code>.</li>
+    </ul>
+    <p class="trap">on n'écrit <b>pas</b> <code>clone</code> dans <code>AMateria.cpp</code> : elle est <code>= 0</code>, donc elle n'a pas de corps. Et rien du tout pour les interfaces.</p>
+    <p class="tip">n'oublie pas <code>NomDeLaClasse::</code> devant chaque fonction dans le <code>.cpp</code>, par exemple <code>void Character::equip(AMateria* m)</code>.</p>
+
+    <h3>Étape 5.4 : compiler <span class="dur">· 10 min</span></h3>
+    <p>Mets le main du sujet dans <code>main.cpp</code>, puis lance <code>make</code>. Il ne doit y avoir <b>aucune erreur</b> et <b>aucun warning</b>. Le programme n'affichera rien encore : c'est normal.</p>
+    <p>Une erreur ? Regarde <a href="#erreurs">les erreurs fréquentes</a> en bas de page.</p>
+
+    <details class="q"><summary>Question de vérif : pourquoi le squelette compile alors que clone() renvoie NULL ?</summary><div>Parce que le compilateur vérifie seulement que les types sont justes : <code>NULL</code> est un <code>AMateria*</code> valable. Le programme ne fera rien d'utile, mais la structure est correcte.</div></details>
+
+    <ul class="checks">
+      <li class="ttl">À faire</li>
+      <li><label><input type="checkbox" id="k5a" checked><span>Les 2 interfaces recopiées exactement</span></label></li>
+      <li><label><input type="checkbox" id="k5e"><span>Les includes corrigés : plus de cercle entre <code>AMateria.hpp</code> et <code>ICharacter.hpp</code></span></label></li>
+      <li><label><input type="checkbox" id="k5b"><span>Les 5 autres <code>.hpp</code> écrits, avec gardes, bons includes et forme canonique</span></label></li>
+      <li><label><input type="checkbox" id="k5c"><span>Les 5 <code>.cpp</code> avec toutes les fonctions vides</span></label></li>
+      <li><label><input type="checkbox" id="k5d"><span><code>make</code> compile sans erreur ni warning avec le main du sujet</span></label></li>
+    </ul>
+  </section>
+
+  <!-- PHASE 6 -->
+  <section id="p6">
+    <div class="phase-head"><span class="num">6</span><div><span class="eyebrow">Phase 6 · 3 h 30</span><h2>Remplir le code, un fichier à la fois</h2></div></div>
+    <p>L'ordre qu'on t'a conseillé : <b>Character</b>, puis <b>les Materias</b> (AMateria, Ice, Cure), puis <b>MateriaSource</b>. Il marche grâce au squelette de la phase 5 : toutes les classes existent déjà, même vides.</p>
+
+    <div class="card">
+      <h3>La méthode, pour chaque fichier</h3>
+      <ol>
+        <li>Lis <b>ta mission</b> : ce que chaque fonction doit faire, avec des questions.</li>
+        <li>Écris <b>ton</b> pseudo-code dans ton cahier.</li>
+        <li>Seulement ensuite, <b>déverrouille</b> le mien et compare.</li>
+        <li>Code la fonction, puis <code>make</code> et un petit test.</li>
+        <li>Envoie-moi ton fichier : je relis.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">6.1</span>Character.cpp <span class="dur">· 1 h 30</span></h3>
+      <p>La plus grosse partie. Prends ton temps et fais une fonction à la fois.</p>
+      <p class="tip">Character ne manipule que des <code>AMateria*</code>, donc il compile même si Ice n'est pas encore codé. Teste tout de suite les index invalides et <code>equip(NULL)</code>. Les vrais tests d'<code>equip</code> et de <code>use</code> viendront après l'étape 6.3, quand Ice existera.</p>
+      <h4>Ta mission, fonction par fonction</h4>
+<pre class="mission"><code>Constructeur(nom)
+    → ranger le nom reçu
+    → le sac doit être vide au départ : que mettre dans les 4 cases ?
+
+getName()
+    → renvoyer le nom
+
+equip(m)
+    → que faire si on te donne une Materia qui n'existe pas (NULL) ?
+    → ranger m dans la 1re case libre, en partant de la case 0
+    → attention : une seule case doit être remplie, pas toutes
+    → sac plein : il ne doit rien se passer
+
+unequip(idx)
+    → vider la case idx
+    → et si la case idx n'existe pas (trop petit, trop grand) ?
+    → rappel du sujet : on NE détruit PAS la Materia
+
+use(idx, cible)
+    → lancer le sort de la case idx sur la cible
+    → il y a 2 cas où il ne doit rien se passer : lesquels ?
+    → c'est la Materia qui sait lancer son sort, pas le Character
+
+operator=(autre)
+    → copier le nom
+    → copie PROFONDE : que faire de mes Materias actuelles, AVANT ?
+    → comment copier une Materia sans connaître son type ?
+    → et si on fait a = a ?
+    → que doit renvoyer operator= ?
+
+Constructeur de copie(autre)
+    → même résultat que operator=, mais l'objet est tout neuf
+    → dans quel état sont les 4 cases au tout début ?
+
+Destructeur
+    → qu'est-ce que le héros possède, et doit libérer ?</code></pre>
+      <p class="caption">Écris ton pseudo-code dans ton cahier, puis compare.</p>
+      <details class="lock"><summary>Déverrouiller mon pseudo-code</summary><div>
+<pre><code>Constructeur(nom)
+    _name = nom
+    pour i de 0 à 3 : _inventory[i] = NULL
+
+getName()
+    renvoyer _name
+
+equip(m)
+    si m est NULL → ne rien faire
+    pour i de 0 à 3 :
+        si _inventory[i] est NULL → _inventory[i] = m, puis STOP (return)
+    (sac plein → rien ne se passe)
+
+unequip(idx)
+    si idx &lt; 0 ou idx &gt; 3 → ne rien faire
+    _inventory[idx] = NULL          ← SANS delete !
+
+use(idx, cible)
+    si idx &lt; 0 ou idx &gt; 3 → ne rien faire
+    si _inventory[idx] est NULL → ne rien faire
+    _inventory[idx]-&gt;use(cible)
+
+operator=(autre)
+    si c'est moi-même (this == &amp;autre) → renvoyer *this
+    _name = autre._name
+    pour i de 0 à 3 : delete _inventory[i], puis _inventory[i] = NULL
+    pour i de 0 à 3 :
+        si autre._inventory[i] n'est pas NULL
+            _inventory[i] = autre._inventory[i]-&gt;clone()
+    renvoyer *this
+
+Constructeur de copie(autre)
+    mettre les 4 cases à NULL   ← AVANT tout le reste
+    puis *this = autre
+
+Destructeur
+    pour i de 0 à 3 : delete _inventory[i]</code></pre>
+        <p class="trap">dans le constructeur de copie, les cases contiennent n'importe quoi au départ. Si tu appelles <code>operator=</code> sans les mettre à <code>NULL</code>, il fera <code>delete</code> sur des adresses au hasard : crash.</p>
+        <p class="trap">teste toujours <code>idx &lt; 0</code> <b>et</b> <code>idx &gt; 3</code>. Lire <code>_inventory[-1]</code>, c'est un comportement indéfini, donc un bug.</p>
+        <p class="trap">sans le test <code>this == &amp;autre</code>, l'auto-affectation <code>a = a</code> supprime les Materias de <code>a</code>, puis essaie de cloner… des Materias détruites.</p>
+      </div></details>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">6.2</span>AMateria.cpp <span class="dur">· 30 min</span></h3>
+      <h4>Ta mission, fonction par fonction</h4>
+<pre class="mission"><code>Constructeur par défaut
+    → donner un type par défaut
+
+Constructeur(type)
+    → ranger le type reçu
+
+Constructeur de copie
+    → la copie doit avoir le même type que l'original
+
+operator=(autre)
+    → relis l'astuce du sujet : copier le type a-t-il un sens ?
+    → que doit renvoyer operator= ?
+
+getType()
+    → renvoyer le type
+
+use(cible)
+    → AMateria ne sait pas quel sort lancer : que doit-elle faire ?
+
+Destructeur
+    → y a-t-il quelque chose à libérer ?</code></pre>
+      <p class="caption">Écris ton pseudo-code dans ton cahier, puis compare.</p>
+      <details class="lock"><summary>Déverrouiller mon pseudo-code</summary><div>
+<pre><code>Constructeur par défaut   → _type = "" (ou "unknown")
+Constructeur(type)        → _type = type
+Constructeur de copie     → copier le type de l'autre
+operator=(autre)          → NE PAS copier le type, renvoyer *this
+getType()                 → renvoyer _type
+use(cible)                → ne rien faire (Ice et Cure affichent)
+Destructeur               → rien</code></pre>
+        <p class="trap">pourquoi <code>operator=</code> ne copie pas le type ? Si on fait <code>monIce = unCure</code>, l'objet resterait un Ice mais avec le type <code>"cure"</code>. Ça n'a pas de sens. C'est l'astuce donnée par le sujet.</p>
+      </div></details>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">6.3</span>Ice.cpp et Cure.cpp <span class="dur">· 45 min</span></h3>
+      <h4>Ta mission, fonction par fonction</h4>
+<pre class="mission"><code>Constructeur par défaut
+    → le type doit être "ice"
+    → qui range le type : Ice, ou AMateria ? Comment Ice le lui demande ?
+
+Constructeur de copie
+    → la partie AMateria de l'objet doit aussi être copiée
+
+clone()
+    → renvoyer un NOUVEL objet : de quel type ? copié à partir de qui ?
+
+use(cible)
+    → afficher le message exact du sujet
+    → avec le nom de la cible : quelle fonction donne ce nom ?
+
+Cure
+    → pareil, avec "cure" et l'autre message</code></pre>
+      <p class="caption">Écris ton pseudo-code dans ton cahier, puis compare.</p>
+      <details class="lock"><summary>Déverrouiller mon pseudo-code</summary><div>
+<pre><code>Constructeur par défaut   → appeler le constructeur d'AMateria avec "ice"
+                            (dans la liste d'initialisation)
+Constructeur de copie     → appeler le constructeur de copie d'AMateria
+clone()                   → fabriquer un nouvel Ice, copie de moi-même
+use(cible)                → afficher "* shoots an ice bolt at " + cible.getName() + " *"
+
+Cure : pareil, avec "cure" et "* heals " + cible.getName() + "'s wounds *"</code></pre>
+        <p class="tip">teste tout de suite : crée un <code>Ice</code>, clone-le, affiche les deux adresses. Elles doivent être différentes. Pense à <code>delete</code> les deux. Puis teste <code>equip</code> et <code>use</code> de Character avec un vrai Ice.</p>
+      </div></details>
+    </div>
+
+    <div class="card">
+      <h3><span class="k">6.4</span>MateriaSource.cpp <span class="dur">· 45 min</span></h3>
+      <h4>Ta mission, fonction par fonction</h4>
+<pre class="mission"><code>Constructeur par défaut
+    → le livre doit être vide au départ
+
+learnMateria(m)
+    → et si m est NULL ?
+    → ranger m dans le 1er emplacement libre (4 au maximum)
+    → livre plein : que faire de m pour éviter une fuite ?
+    → le sujet dit « copie » : voir le choix A ou B juste en dessous
+
+createMateria(type)
+    → chercher un modèle qui a ce type
+    → trouvé : renvoyer une copie NEUVE, pas le modèle lui-même. Pourquoi ?
+    → pas trouvé : que renvoyer ?
+
+operator=, constructeur de copie, destructeur
+    → mêmes questions que pour Character</code></pre>
+      <p><b>Un choix à faire, et à savoir justifier.</b> Le sujet dit que <code>learnMateria</code> « copie la Materia ». Mais le main fait <code>learnMateria(new Ice())</code> sans jamais faire <code>delete</code>.</p>
+      <div class="tbl"><table>
+        <thead><tr><th></th><th>Option A : ranger le pointeur reçu</th><th>Option B : ranger un clone</th></tr></thead>
+        <tbody>
+          <tr><td>Respect du mot « copie »</td><td>pas au sens strict</td><td>oui, c'est une vraie copie</td></tr>
+          <tr><td>Fuite avec le main du sujet ?</td><td>non : la source devient propriétaire</td><td>non, si l'original est supprimé</td></tr>
+          <tr><td>Longueur</td><td>plus court</td><td>une étape de plus</td></tr>
+        </tbody>
+      </table></div>
+      <p>Avec les deux options, la règle est la même : <b>après <code>learnMateria(m)</code>, le main ne touche plus jamais à <code>m</code></b>. Choisis-en une et dis-moi pourquoi.</p>
+      <p class="caption">Écris ton pseudo-code dans ton cahier, puis compare.</p>
+      <details class="lock"><summary>Déverrouiller mon pseudo-code</summary><div>
+<pre><code>Constructeur par défaut   → les 4 modèles à NULL
+
+learnMateria(m)
+    si m est NULL → ne rien faire
+    pour i de 0 à 3 :
+        si _templates[i] est NULL
+            option A : _templates[i] = m
+            option B : _templates[i] = m-&gt;clone(), puis delete m
+            puis STOP
+    livre plein → delete m (la source avait promis de la prendre)
+
+createMateria(type)
+    pour i de 0 à 3 :
+        si _templates[i] n'est pas NULL et _templates[i]-&gt;getType() == type
+            renvoyer _templates[i]-&gt;clone()
+    renvoyer 0
+
+operator=, constructeur de copie, destructeur
+    → même logique que Character (avec clone pour la copie)</code></pre>
+        <p class="why">createMateria renvoie un clone, car le modèle doit rester dans le livre pour en fabriquer d'autres. Si on donnait le modèle, le héros le détruirait, et le livre pointerait vers un objet mort.</p>
+      </div></details>
+    </div>
+
+    <ul class="checks">
+      <li class="ttl">À faire</li>
+      <li><label><input type="checkbox" id="k6c"><span>Character.cpp : mon pseudo-code écrit, puis le code. <code>make</code> OK, index invalides testés</span></label></li>
+      <li><label><input type="checkbox" id="k6a"><span>AMateria.cpp : mon pseudo-code écrit, puis le code. <code>make</code> OK</span></label></li>
+      <li><label><input type="checkbox" id="k6b"><span>Ice.cpp et Cure.cpp : test du clone OK, puis <code>equip</code> et <code>use</code> de Character testés</span></label></li>
+      <li><label><input type="checkbox" id="k6e"><span>Option A ou B choisie pour <code>learnMateria</code>, et je sais pourquoi</span></label></li>
+      <li><label><input type="checkbox" id="k6d"><span>MateriaSource.cpp rempli, le main du sujet affiche les 2 lignes</span></label></li>
+    </ul>
+  </section>
+
+  <!-- PHASE 7 -->
+  <section id="p7">
+    <div class="phase-head"><span class="num">7</span><div><span class="eyebrow">Phase 7 · 1 h 15</span><h2>Les tests dans le main</h2></div></div>
+    <p>La grille dit : « pas assez de tests = ne notez pas l'exercice ». Chaque test doit <b>montrer</b> quelque chose, comme les adresses du Brain dans l'ex01. Garde le main du sujet en premier, puis ajoute tes tests, chacun avec un titre affiché.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>#</th><th>Test</th><th>Ce qu'il prouve</th></tr></thead>
+      <tbody>
+        <tr><td class="n">1</td><td>Le main du sujet</td><td>Les 2 lignes exactes s'affichent</td></tr>
+        <tr><td class="n">2</td><td>Équiper 5 Materias</td><td>La 5ᵉ est refusée (le main la <code>delete</code> lui-même)</td></tr>
+        <tr><td class="n">3</td><td><code>use</code> et <code>unequip</code> avec -1, 4 et un slot vide</td><td>Rien ne se passe, pas de crash</td></tr>
+        <tr><td class="n">4</td><td>Garder l'adresse, <code>unequip</code>, puis <code>delete</code></td><td>Pas de fuite pour les Materias par terre</td></tr>
+        <tr><td class="n">5</td><td><code>Character copie(original)</code>, puis modifier l'original</td><td>Copie profonde : adresses différentes, la copie ne change pas</td></tr>
+        <tr><td class="n">6</td><td><code>a = b</code> alors que <code>a</code> a déjà des Materias</td><td>Les anciennes de <code>a</code> sont supprimées : 0 fuite</td></tr>
+        <tr><td class="n">7</td><td><code>a = a</code> (auto-affectation)</td><td>Rien ne casse, <code>a</code> garde ses Materias</td></tr>
+        <tr><td class="n">8</td><td>Copier, puis <code>delete</code> l'original, puis utiliser la copie</td><td>La copie marche encore</td></tr>
+        <tr><td class="n">9</td><td><code>createMateria("feu")</code>, puis <code>equip</code> du résultat</td><td>Renvoie <code>0</code>, et <code>equip(NULL)</code> ne plante pas</td></tr>
+        <tr><td class="n">10</td><td><code>learnMateria</code> 5 fois</td><td>Le livre est plein, et 0 fuite</td></tr>
+      </tbody>
+    </table></div>
+    <p class="tip">les tests 6 à 10 sont ceux qui <b>cassent un code fragile</b>. Un évaluateur les lance souvent. Lance-les toujours avec valgrind.</p>
+    <ul class="checks">
+      <li class="ttl">À faire</li>
+      <li><label><input type="checkbox" id="k7a"><span>Le main du sujet passe (tests 1)</span></label></li>
+      <li><label><input type="checkbox" id="k7b"><span>Les tests 2 à 5 passent</span></label></li>
+      <li><label><input type="checkbox" id="k7c"><span>Les tests pièges 6 à 10 passent, avec 0 fuite</span></label></li>
+    </ul>
+  </section>
+
+  <!-- PHASE 8 -->
+  <section id="p8">
+    <div class="phase-head"><span class="num">8</span><div><span class="eyebrow">Phase 8 · 30 min</span><h2>Vérifier avec la grille de correction</h2></div></div>
+    <p>Chaque point de la grille, et où le montrer dans ton code. Objectif : savoir le montrer à l'évaluateur en moins de 30 secondes.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Point de la grille</th><th>Où dans ton code</th><th>Comment le montrer</th></tr></thead>
+      <tbody>
+        <tr><td>Compile avec <code>c++ -Wall -Wextra -Werror</code>, en C++98</td><td><code>Makefile</code></td><td><code>make re</code> : aucune erreur, aucun warning</td></tr>
+        <tr><td>Aucune fonction interdite, ni <code>using namespace</code>, ni <code>friend</code></td><td>tout le projet</td><td><code>grep -rn "printf\|malloc\|using namespace\|friend" .</code> → rien</td></tr>
+        <tr><td>Aucune fonction implémentée dans un header</td><td>tous les <code>.hpp</code></td><td>chaque fonction finit par <code>;</code> (sauf les <code>{}</code> des interfaces du sujet)</td></tr>
+        <tr><td>Interfaces avec destructeur virtuel</td><td><code>ICharacter.hpp</code>, <code>IMateriaSource.hpp</code></td><td>la ligne <code>virtual ~...() {}</code></td></tr>
+        <tr><td>Interfaces exactement comme le sujet</td><td>les 2 mêmes fichiers</td><td>les ouvrir à côté du PDF</td></tr>
+        <tr><td>MateriaSource implémente IMateriaSource et marche</td><td><code>MateriaSource.hpp</code> / <code>.cpp</code></td><td><code>: public IMateriaSource</code> + tests 1, 9, 10</td></tr>
+        <tr><td>Ice et Cure héritent d'AMateria, affichages corrects</td><td><code>Ice.cpp</code>, <code>Cure.cpp</code></td><td>test 1 avec <code>| cat -e</code></td></tr>
+        <tr><td>AMateria abstraite : <code>clone()</code> pure</td><td><code>AMateria.hpp</code></td><td>la ligne <code>virtual AMateria* clone() const = 0;</code></td></tr>
+        <tr><td>AMateria a un attribut <code>protected</code> pour le type</td><td><code>AMateria.hpp</code></td><td><code>protected: std::string _type;</code></td></tr>
+        <tr><td>Character implémente ICharacter, 4 Materias max</td><td><code>Character.hpp</code> / <code>.cpp</code></td><td><code>_inventory[4]</code> + test 2</td></tr>
+        <tr><td>Copie profonde (constructeur de copie et <code>operator=</code>)</td><td><code>Character.cpp</code></td><td>tests 5 à 8, adresses affichées</td></tr>
+        <tr><td>Tests assez nombreux</td><td><code>main.cpp</code></td><td>les 10 tests, chacun avec un titre</td></tr>
+        <tr><td>Aucune fuite</td><td>—</td><td><code>valgrind --leak-check=full ./interface</code> → 0 fuite, 0 erreur</td></tr>
+      </tbody>
+    </table></div>
+    <ul class="checks">
+      <li class="ttl">Avant la soutenance</li>
+      <li><label><input type="checkbox" id="k8a"><span><code>make re</code> : aucune erreur ni warning</span></label></li>
+      <li><label><input type="checkbox" id="k8f"><span>Le <code>grep</code> des interdits ne trouve rien</span></label></li>
+      <li><label><input type="checkbox" id="k8b"><span>valgrind : 0 fuite, 0 erreur, sur tous les tests</span></label></li>
+      <li><label><input type="checkbox" id="k8c"><span>Les 2 interfaces sont identiques au sujet</span></label></li>
+      <li><label><input type="checkbox" id="k8d"><span>Je sais montrer chaque point de la grille en moins de 30 secondes</span></label></li>
+    </ul>
+  </section>
+
+  <!-- PHASE 9 -->
+  <section id="p9">
+    <div class="phase-head"><span class="num">9</span><div><span class="eyebrow">Phase 9 · 30 min</span><h2>Simuler la défense ensemble</h2></div></div>
+    <p>À la toute fin, on fait l'évaluation ensemble. Je te pose ces 5 questions comme un évaluateur. Tu réponds sans regarder, puis on vérifie avec <a href="#recap">la fiche de soutenance</a>.</p>
+    <ol>
+      <li>Quelle est la différence entre <code>AMateria</code> et <code>ICharacter</code> ? Pourquoi l'un a un <code>.cpp</code> et pas l'autre ?</li>
+      <li>Que se passe-t-il si j'enlève le <code>virtual</code> du destructeur d'<code>AMateria</code> ?</li>
+      <li>Pourquoi utiliser <code>clone()</code> au lieu de <code>new Ice(*m)</code> ?</li>
+      <li>Ton <code>unequip</code> ne fait pas <code>delete</code>. Où va la Materia, et qui la libère ?</li>
+      <li>Je copie un Character, puis je détruis l'original. Montre-moi que la copie marche encore.</li>
+    </ol>
+    <p>Ensuite, je te proposerai des tests pour essayer de casser ton code.</p>
+    <ul class="checks">
+      <li class="ttl">Le jour J</li>
+      <li><label><input type="checkbox" id="k9a"><span>J'ai répondu aux 5 questions sans regarder</span></label></li>
+      <li><label><input type="checkbox" id="k9b"><span>Mon code a résisté aux tests pièges</span></label></li>
+    </ul>
+  </section>
+
+  <!-- RECAP -->
+  <section id="recap">
+    <span class="eyebrow">Récap · à relire avant l'évaluation · 15 min</span>
+    <h2>Fiche de soutenance</h2>
+    <p>Les questions que le correcteur peut te poser. Pour chacune : une réponse courte, avec un exemple de l'exercice.</p>
+
+    <div class="card">
+      <h3>C'est quoi une classe abstraite ?</h3>
+      <p>Une classe avec au moins une fonction virtuelle pure (<code>= 0</code>). On ne peut pas la créer seule, seulement ses filles. Elle peut avoir des attributs et du code.</p>
+      <pre><code>class AMateria {
+    protected:
+        std::string _type;                   // elle a un attribut
+    public:
+        virtual AMateria* clone() const = 0; // = 0 → abstraite
+};
+// new AMateria("ice");  ← ne compile pas
+// new Ice();            ← OK</code></pre>
+    </div>
+
+    <div class="card">
+      <h3>C'est quoi une interface ?</h3>
+      <p>Une classe abstraite « pure » : <b>que</b> des fonctions <code>= 0</code> et un destructeur virtuel. Pas d'attribut, pas de code. C'est un contrat : « toute classe qui hérite de moi a ces fonctions ».</p>
+      <p>Dans l'exo : <code>ICharacter</code> et <code>IMateriaSource</code>. Elles n'ont qu'un <code>.hpp</code>, car il n'y a aucun code à écrire.</p>
+    </div>
+
+    <div class="card">
+      <h3>À quoi sert une interface, si on réécrit tout dans la classe concrète ?</h3>
+      <ul>
+        <li><b>C'est un contrat qui impose une trame.</b> Si <code>MateriaSource</code> oublie <code>createMateria</code>, ça ne compile pas.</li>
+        <li><b>Celui qui l'utilise ne dépend que du contrat.</b> Le main ne parle que d'<code>IMateriaSource</code>. Pour changer de livre, on changerait une seule ligne.</li>
+        <li><code>Ice::use(ICharacter&amp; target)</code> peut viser n'importe quel personnage, sans le connaître.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Quelle différence entre classe abstraite et interface ?</h3>
+      <p><code>AMateria</code> a un attribut (<code>_type</code>) et du code (<code>getType</code>), donc un <code>.cpp</code>. <code>ICharacter</code> n'a rien de tout ça : seulement des <code>= 0</code>, donc un <code>.hpp</code> seul.</p>
+    </div>
+
+    <div class="card">
+      <h3>Que veut dire <code>= 0</code> ?</h3>
+      <p>La fonction est <b>virtuelle pure</b> : elle n'a pas de code dans la mère. Chaque fille <b>doit</b> l'écrire, sinon la fille est abstraite elle aussi.</p>
+      <p>Exemple : <code>clone()</code> est <code>= 0</code> dans AMateria. Ice et Cure écrivent chacun leur version.</p>
+    </div>
+
+    <div class="card">
+      <h3>À quoi sert <code>clone()</code> ?</h3>
+      <p>À copier une Materia sans savoir si c'est un Ice ou un Cure. On demande à l'objet de se copier lui-même, car lui connaît son vrai type.</p>
+      <p>Exemple : <code>createMateria("ice")</code> renvoie <code>_templates[i]-&gt;clone()</code>. Et la copie d'un Character clone chaque Materia de son sac.</p>
+    </div>
+
+    <div class="card">
+      <h3>Où est le polymorphisme ?</h3>
+      <p>Dans <code>me-&gt;use(0, *bob)</code>, <code>me</code> est un <code>ICharacter*</code>, mais c'est <code>Character::use</code> qui tourne. Puis <code>_inventory[0]-&gt;use(bob)</code> appelle <code>Ice::use</code>, alors que le slot est un <code>AMateria*</code>.</p>
+    </div>
+
+    <div class="card">
+      <h3>Pourquoi le destructeur est <code>virtual</code> ?</h3>
+      <p>Dans le main, <code>delete me;</code> passe par un <code>ICharacter*</code>. Sans <code>virtual</code>, le destructeur de Character ne serait pas appelé, et ses Materias ne seraient jamais libérées : fuite. Pareil pour <code>delete</code> d'un <code>AMateria*</code> qui est un Ice.</p>
+    </div>
+
+    <div class="card">
+      <h3>Comment est faite la copie d'un Character ?</h3>
+      <p>Copie <b>profonde</b> : je supprime mes Materias, puis je clone chaque Materia de l'autre. Les deux héros ont des Materias à des adresses différentes. Sinon, le même objet serait libéré deux fois.</p>
+    </div>
+
+    <div class="card">
+      <h3>C'est quoi la règle des trois ?</h3>
+      <p>Si une classe possède de la mémoire créée avec <code>new</code>, son destructeur, son constructeur de copie et son <code>operator=</code> doivent tous les trois s'en occuper. Dans l'exo : <code>Character</code> et <code>MateriaSource</code>.</p>
+    </div>
+
+    <div class="card">
+      <h3>Pourquoi <code>operator=</code> d'AMateria ne copie pas le type ?</h3>
+      <p>Si on fait <code>monIce = unCure</code>, l'objet reste un Ice. Lui donner le type <code>"cure"</code> n'aurait pas de sens. C'est l'astuce du sujet.</p>
+    </div>
+
+    <div class="card">
+      <h3>Qui libère la mémoire ?</h3>
+      <ul>
+        <li>Les modèles appris : le destructeur de <code>MateriaSource</code>.</li>
+        <li>Les Materias équipées : le destructeur de <code>Character</code>.</li>
+        <li><code>unequip</code> ne fait <b>pas</b> <code>delete</code> (le sujet l'interdit). Le main garde l'adresse avant, puis fait <code>delete</code>.</li>
+      </ul>
+      <p>Preuve : <code>valgrind</code> affiche 0 fuite.</p>
+    </div>
+
+    <div class="card">
+      <h3>Pourquoi <code>class ICharacter;</code> dans AMateria.hpp ?</h3>
+      <p>AMateria.hpp et ICharacter.hpp parlent l'un de l'autre. S'ils s'incluaient tous les deux, ils tourneraient en rond. La déclaration anticipée dit juste « ce nom existe ». Le vrai <code>#include</code> est dans le <code>.cpp</code>.</p>
+    </div>
+
+    <div class="card">
+      <h3>Il y a des <code>{}</code> dans tes interfaces. La grille n'interdit pas le code dans les headers ?</h3>
+      <p>Si, mais ces <code>{}</code> viennent du sujet : il impose <code>virtual ~ICharacter() {}</code>, et la grille demande des interfaces « exactement comme le sujet ». Toutes mes autres fonctions sont dans les <code>.cpp</code>.</p>
+    </div>
+  </section>
+
+  <!-- ERREURS -->
+  <section id="erreurs">
+    <span class="eyebrow">Aide-mémoire</span>
+    <h2>Les erreurs de compilation fréquentes</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Le message contient…</th><th>Ce que ça veut dire</th><th>Où regarder</th></tr></thead>
+      <tbody>
+        <tr><td><code>'AMateria' has not been declared</code></td><td>Deux <code>.hpp</code> s'incluent l'un l'autre et tournent en rond.</td><td>Remplace un des <code>#include</code> par <code>class AMateria;</code> (voir B5).</td></tr>
+        <tr><td><code>abstract type</code> / <code>cannot allocate an object of abstract type</code></td><td>Tu essaies de créer une classe qui a encore une fonction <code>= 0</code> non redéfinie.</td><td>Compare la signature dans la fille avec celle de la mère, <code>const</code> compris.</td></tr>
+        <tr><td><code>incomplete type</code> / <code>invalid use of incomplete type</code></td><td>Le fichier ne connaît la classe que par <code>class X;</code>, mais tu appelles une de ses fonctions.</td><td>Ajoute le vrai <code>#include</code> dans le <code>.cpp</code>.</td></tr>
+        <tr><td><code>has not been declared</code> / <code>does not name a type</code></td><td>Le compilateur ne connaît pas ce nom.</td><td>Un include ou une déclaration anticipée manque en haut du fichier.</td></tr>
+        <tr><td><code>undefined reference to</code></td><td>La fonction est déclarée dans le <code>.hpp</code> mais pas écrite.</td><td>Vérifie le <code>.cpp</code>, le <code>NomClasse::</code>, et que le <code>.cpp</code> est dans le Makefile.</td></tr>
+        <tr><td><code>redefinition of class</code></td><td>La classe est lue deux fois.</td><td>Vérifie les gardes <code>#ifndef</code> du <code>.hpp</code>.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- CAHIER -->
+  <section id="cahier">
+    <span class="eyebrow">Ma page de cahier</span>
+    <h2>Le main annoté</h2>
+    <p>Le main du sujet ligne par ligne, avec tout ce qu'il faut savoir autour. Compare avec ta page de cahier pour voir s'il te manque quelque chose.</p>
+    <ul class="notes">
+      <li><span class="m y">jaune</span> interface : <code>.hpp</code> seul</li>
+      <li><span class="m o">orange</span> abstraite : <code>.hpp</code> + <code>.cpp</code>, pas de <code>new</code></li>
+      <li><span class="m g">vert</span> concrète : <code>.hpp</code> + <code>.cpp</code></li>
+      <li><span class="m b">bleu</span> fonction : où elle est codée</li>
+      <li><span class="m p">rose</span> mémoire : qui fait le <code>delete</code></li>
+    </ul>
+
+    <div class="paper">
+      <div class="row">
+        <pre><code><span class="m y">IMateriaSource</span>* src = new <span class="m g">MateriaSource</span>();</code></pre>
+        <ul class="notes">
+          <li><span class="m y">IMateriaSource</span> interface → <code>IMateriaSource.hpp</code> seul</li>
+          <li><span class="m g">MateriaSource</span> concrète → <code>MateriaSource.hpp</code> + <code>.cpp</code>. Son constructeur par défaut met les 4 modèles à <code>NULL</code></li>
+          <li><code>src</code> = juste le nom de la variable (« source »)</li>
+          <li><span class="m p">delete</span> fait par le main : <code>delete src;</code></li>
+        </ul>
+      </div>
+      <div class="row">
+        <pre><code>src-&gt;<span class="m b">learnMateria</span>(new <span class="m g">Ice</span>());
+src-&gt;<span class="m b">learnMateria</span>(new <span class="m g">Cure</span>());</code></pre>
+        <ul class="notes">
+          <li><span class="m b">learnMateria</span> <code>= 0</code> dans <code>IMateriaSource.hpp</code>, codée dans <code>MateriaSource.cpp</code>. Range le modèle dans la 1re case vide</li>
+          <li><span class="m g">Ice</span> <span class="m g">Cure</span> concrètes, héritent d'<span class="m o">AMateria</span> → <code>Ice.hpp/.cpp</code>, <code>Cure.hpp/.cpp</code>. Leur constructeur met le type <code>"ice"</code> / <code>"cure"</code></li>
+          <li><span class="m p">delete</span> fait par MateriaSource (destructeur, ou tout de suite avec l'option B)</li>
+        </ul>
+      </div>
+      <div class="row">
+        <pre><code><span class="m y">ICharacter</span>* me = new <span class="m g">Character</span>("me");</code></pre>
+        <ul class="notes">
+          <li><span class="m y">ICharacter</span> interface → <code>ICharacter.hpp</code> seul</li>
+          <li><span class="m g">Character</span> concrète → <code>Character.hpp</code> + <code>.cpp</code>. Constructeur avec le nom (demandé par le sujet). Le sac est vide : 4 × <code>NULL</code></li>
+          <li><span class="m p">delete</span> fait par le main : <code>delete me;</code></li>
+        </ul>
+      </div>
+      <div class="row">
+        <pre><code><span class="m o">AMateria</span>* tmp;</code></pre>
+        <ul class="notes">
+          <li><span class="m o">AMateria</span> abstraite → <code>AMateria.hpp</code> + <code>.cpp</code>. Un <b>pointeur</b> vers elle est permis, un <code>new AMateria</code> non</li>
+          <li><code>tmp</code> n'est pas un objet, juste une « main » qui tient une adresse. Pas de <code>new</code>, donc pas de <code>delete</code></li>
+        </ul>
+      </div>
+      <div class="row">
+        <pre><code>tmp = src-&gt;<span class="m b">createMateria</span>("ice");</code></pre>
+        <ul class="notes">
+          <li><span class="m b">createMateria</span> <code>= 0</code> dans <code>IMateriaSource.hpp</code>, codée dans <code>MateriaSource.cpp</code></li>
+          <li>Cherche le modèle de type <code>"ice"</code>, puis appelle <span class="m b">clone</span>() → <code>Ice::clone()</code> dans <code>Ice.cpp</code> → fait un <code>new Ice</code></li>
+          <li>Type inconnu → renvoie <code>0</code></li>
+          <li><span class="m p">delete</span> fait par celui qui reçoit la copie : ici le Character, après <code>equip</code></li>
+        </ul>
+      </div>
+      <div class="row">
+        <pre><code>me-&gt;<span class="m b">equip</span>(tmp);</code></pre>
+        <ul class="notes">
+          <li><span class="m b">equip</span> <code>= 0</code> dans <code>ICharacter.hpp</code>, codée dans <code>Character.cpp</code>. Range la Materia dans la 1re case vide : slot 0</li>
+          <li><span class="m p">delete</span> la Materia appartient maintenant à <code>me</code> → son destructeur la libérera</li>
+        </ul>
+      </div>
+      <div class="row">
+        <pre><code>tmp = src-&gt;<span class="m b">createMateria</span>("cure");
+me-&gt;<span class="m b">equip</span>(tmp);</code></pre>
+        <ul class="notes">
+          <li>Même chose avec Cure → <code>Cure::clone()</code>, rangée dans le slot 1</li>
+          <li><code>tmp</code> est réutilisé : il change juste d'adresse</li>
+        </ul>
+      </div>
+      <div class="row">
+        <pre><code><span class="m y">ICharacter</span>* bob = new <span class="m g">Character</span>("bob");</code></pre>
+        <ul class="notes">
+          <li>Un 2ᵉ personnage, il sert juste de cible. Son sac reste vide</li>
+          <li><span class="m p">delete</span> fait par le main : <code>delete bob;</code></li>
+        </ul>
+      </div>
+      <div class="row">
+        <pre><code>me-&gt;<span class="m b">use</span>(0, *bob);</code></pre>
+        <ul class="notes">
+          <li><span class="m b">use(int, ICharacter&amp;)</span> <code>= 0</code> dans <code>ICharacter.hpp</code>, codée dans <code>Character.cpp</code>. Vérifie l'index (0 à 3) et que le slot n'est pas vide</li>
+          <li>Puis appelle <code>_inventory[0]-&gt;use(*bob)</code> → <span class="m b">Ice::use</span> dans <code>Ice.cpp</code> (polymorphisme : le slot est un <code>AMateria*</code>, mais c'est la version d'Ice qui tourne)</li>
+          <li><code>Ice::use</code> appelle <span class="m b">getName</span>() → codée dans <code>Character.cpp</code> → renvoie <code>"bob"</code></li>
+          <li><code>*bob</code> = l'objet bob lui-même, car <code>use</code> attend une référence</li>
+          <li>Affiche <code>* shoots an ice bolt at bob *</code></li>
+        </ul>
+      </div>
+      <div class="row">
+        <pre><code>me-&gt;<span class="m b">use</span>(1, *bob);</code></pre>
+        <ul class="notes">
+          <li>Pareil avec le slot 1 → <span class="m b">Cure::use</span> dans <code>Cure.cpp</code></li>
+          <li>Affiche <code>* heals bob's wounds *</code></li>
+        </ul>
+      </div>
+      <div class="row">
+        <pre><code><span class="m p">delete</span> bob;</code></pre>
+        <ul class="notes">
+          <li>Destructeur de Character, appelé via <code>ICharacter*</code> → marche grâce au destructeur <code>virtual</code></li>
+          <li>Son sac est vide : rien d'autre à libérer</li>
+        </ul>
+      </div>
+      <div class="row">
+        <pre><code><span class="m p">delete</span> me;</code></pre>
+        <ul class="notes">
+          <li>Destructeur de Character → <code>delete</code> sur les 4 slots → libère l'Ice et le Cure équipés</li>
+          <li>Ces <code>delete</code> passent par <code>AMateria*</code> → le destructeur d'AMateria doit être <code>virtual</code></li>
+        </ul>
+      </div>
+      <div class="row">
+        <pre><code><span class="m p">delete</span> src;</code></pre>
+        <ul class="notes">
+          <li>Destructeur de MateriaSource → <code>delete</code> sur les 4 modèles → libère l'Ice et le Cure appris</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Le compte final</h3>
+      <p><b>7 <code>new</code></b> dans ce main : MateriaSource, Ice (modèle), Cure (modèle), Character « me », Ice (clone), Cure (clone), Character « bob ».</p>
+      <p><b>7 <code>delete</code></b> : bob, me + ses 2 Materias, src + ses 2 modèles.</p>
+      <p class="why">7 <code>new</code> = 7 <code>delete</code>, donc 0 fuite. C'est ce que valgrind doit confirmer. (Avec l'option B, il y a 2 clones de plus et 2 <code>delete</code> de plus dans <code>learnMateria</code> : le compte reste juste.)</p>
+    </div>
+  </section>
+
+  <div class="pager"><a id="prev" href="#plan">← Précédente</a><a id="next" href="#p1">Suivante →</a></div>
+</div>
+
+<script>
+(function () {
+  var order = ['regles','plan','p1','p2','p3','p4','p5','p6','p7','p8','p9','recap','erreurs','cahier'];
+  var names = {regles:'Règles',plan:'Plan',p1:'1 · Histoire',p2:'2 · Main',p3:'3 · Notions',p4:'4 · Fichiers',p5:'5 · Squelette',p6:'6 · Code',p7:'7 · Tests',p8:'8 · Grille',p9:'9 · Défense',recap:'Fiche de soutenance',erreurs:'Erreurs fréquentes',cahier:'Main annoté'};
+  var VKEY = 'materia-view';
+  var prev = document.getElementById('prev'), next = document.getElementById('next');
+  function show(id, scroll) {
+    if (id !== 'tout' && order.indexOf(id) < 0) id = 'p5';
+    order.forEach(function (s) { var el = document.getElementById(s); if (el) el.hidden = (id !== 'tout' && s !== id); });
+    document.querySelectorAll('.steps a').forEach(function (a) { a.setAttribute('aria-current', a.getAttribute('href') === '#' + id ? 'true' : 'false'); });
+    var i = order.indexOf(id);
+    prev.hidden = (id === 'tout' || i <= 0); next.hidden = (id === 'tout' || i >= order.length - 1);
+    if (i > 0) { prev.href = '#' + order[i-1]; prev.textContent = '← ' + names[order[i-1]]; }
+    if (i >= 0 && i < order.length - 1) { next.href = '#' + order[i+1]; next.textContent = names[order[i+1]] + ' →'; }
+    try { localStorage.setItem(VKEY, id); } catch (e) {}
+    if (scroll) { var nav = document.querySelector('.steps'); window.scrollTo(0, nav.offsetTop - 8); }
+  }
+  var start = location.hash.slice(1);
+  if (!start) { try { start = localStorage.getItem(VKEY) || ''; } catch (e) {} }
+  show(start || 'p5', false);
+  window.addEventListener('hashchange', function () { show(location.hash.slice(1), true); });
+})();
+(function () {
+  var boxes = document.querySelectorAll('.checks input[type="checkbox"]');
+  var KEY = 'materia-roadmap-v2';
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+  function update() {
+    var done = 0;
+    boxes.forEach(function (b) { if (b.checked) done++; });
+    document.getElementById('bar').style.width = (done / boxes.length * 100) + '%';
+    document.getElementById('pct').textContent = done + ' / ' + boxes.length + ' cochées';
+  }
+  boxes.forEach(function (b) {
+    if (Object.prototype.hasOwnProperty.call(saved, b.id)) b.checked = !!saved[b.id];
+    b.addEventListener('change', function () {
+      saved[b.id] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+      update();
+    });
+  });
+  update();
+})();
+</script>
