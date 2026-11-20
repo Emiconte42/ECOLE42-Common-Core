@@ -11,6 +11,10 @@ Bureaucrat::Bureaucrat(std::string const name, int grade): _name(name), _grade(g
 {
 	if (CALL_LOG)
 		std::cout << GREEN << "Bureaucrat : Parametric constructor called" << endofline;
+	if (grade > 150)
+		throw Bureaucrat::GradeTooHighException();
+	else if (grade < 1)
+		throw Bureaucrat::GradeTooLowException();
 }
 
 Bureaucrat::Bureaucrat(Bureaucrat const & cpy)
@@ -23,7 +27,7 @@ Bureaucrat::Bureaucrat(Bureaucrat const & cpy)
 Bureaucrat::~Bureaucrat()
 {
 	if (CALL_LOG)
-		std::cout << RED << "Bureaucrat : Destructor called" << endofline;
+		std::cout << BLUE << "Bureaucrat : Destructor called" << endofline;
 }
 
 std::string Bureaucrat::getName() const 
@@ -56,36 +60,30 @@ std::ostream & operator<<(std::ostream &o, Bureaucrat const &bur)
 	return (o); // retourne le flux
 }
 
-Bureaucrat::GradeTooHighException::GradeTooHighException(const std::string &name) : _messageHigh(name + "'s grade too high")
+const char *Bureaucrat::GradeTooHighException::what() const throw ()
 {
-	if (CALL_LOG)
-		std::cout << GREEN << "GradeTooHighException : Default constructor called" << endofline;
+	return ("Bureaucrat: grade too high - grade > 150");
 }
 
-Bureaucrat::GradeTooHighException::~GradeTooHighException()
+const char *Bureaucrat::GradeTooLowException::what() const throw ()
 {
-	if (CALL_LOG)
-		std::cout << RED << "GradeTooHighException : Destructor called" << endofline;
+	return ("Bureaucrat: grade too low - grade < 1");
 }
 
-Bureaucrat::GradeTooLowException::GradeTooLowException(const std::string &name) : _messageLow(name + "'s grade too low")
+void Bureaucrat::incrementGrade()
 {
-	if (CALL_LOG)
-		std::cout << GREEN << "GradeTooLowException : Default constructor called" << endofline;
+	_grade = _grade - 1;
+	if (_grade > 150)
+		throw Bureaucrat::GradeTooHighException();
+	else if (_grade < 1)
+		throw Bureaucrat::GradeTooLowException();
 }
 
-Bureaucrat::GradeTooLowException::~GradeTooLowException()
+void Bureaucrat::decrementGrade()
 {
-	if (CALL_LOG)
-		std::cout << RED << "GradeTooLowException : Destructor called" << endofline;
-}
-
-const char *Bureaucrat::GradeTooHighException::what() const throw () 
-{
-	return (_messageHigh.c_str());
-}
-
-const char *Bureaucrat::GradeTooLowException::what() const throw () 
-{
-	return (_messageLow.c_str());
+	_grade = _grade + 1;
+	if (_grade > 150)
+		throw Bureaucrat::GradeTooHighException();
+	else if (_grade < 1)
+		throw Bureaucrat::GradeTooLowException();
 }

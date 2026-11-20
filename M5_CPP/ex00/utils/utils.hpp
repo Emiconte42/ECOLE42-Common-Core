@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#define CALL_LOG 1
+# define CALL_LOG 1
 
 std::ostream& endofline(std::ostream& os);
 
