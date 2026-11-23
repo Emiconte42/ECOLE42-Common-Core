@@ -3,28 +3,29 @@
 
 #include <iostream>
 #include <string>
-// #include <exception>
+#include <exception>
+#include "Bureaucrat.hpp"
 
 class Form
 {
 	private :
 		std::string const	_name;
 		bool				_isSigned;
-		int					_grade;
+		int const			_gradeSigner;
+		int const			_gradeExecuter;
 
 	public :
-		Form(); // constructeur par defaut
-		// Bureaucrat(std::string const name, int grade); // constructeur par defaut avec name et grade
-		Form (Form const & cpy); // constructeur par copie
-		Form & operator=(Form const &other); // operateur d'assignation
-		~Form(); // destructeur
+		Form();
+		Form(std::string const name, int const gradeSigner, int const gradeExecuter);
+		Form (Form const & cpy);
+		Form & operator=(Form const &other);
+		~Form();
 
-		std::string getName() const;
-		int getGrade() const;
-
-		void incrementGrade();
-		void decrementGrade();
-		void beSigned(const Bureaucrat bur); // prends un bureaucrat en parametre
+		std::string		getName() const;
+		bool			getSigned() const;
+		int				getGradeToSign() const;
+		int				getGradeToExecute() const;
+		void			beSigned(Bureaucrat const &bur); // beSigned reçoit une reference vers un Bureaucrat constant, et ne renvoie rien
 
 		class GradeTooHighException : public std::exception
 		{

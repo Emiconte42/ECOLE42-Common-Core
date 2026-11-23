@@ -4,9 +4,8 @@
 #include <iostream>
 #include <string>
 #include <exception>
-#include "Form.hpp"
 
-Class Form;
+class Form;
 
 class Bureaucrat
 {
@@ -21,12 +20,11 @@ class Bureaucrat
 		Bureaucrat & operator=(Bureaucrat const &other); // operateur d'assignation
 		~Bureaucrat(); // destructeur
 
-		std::string getName() const;
-		int getGrade() const;
-
-		void incrementGrade();
-		void decrementGrade();
-		void signForm(Form form) const;
+		std::string		getName() const;
+		int				getGrade() const;
+		void			incrementGrade();
+		void			decrementGrade();
+		void			signForm(Form form) const;
 
 		class GradeTooHighException : public std::exception
 		{

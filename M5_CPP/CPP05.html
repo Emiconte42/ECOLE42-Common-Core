@@ -1,0 +1,1267 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>CPP05</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout : une colonne de lecture. Chaque phase = une grande section numérotée (l'ordre est réel), cases à cocher en fin de phase. Schémas mémoire en SVG : pile à gauche, tas à droite. */
+:root {
+  --bg: #F5F7FA;
+  --surface: #FFFFFF;
+  --ink: #18202B;
+  --muted: #5A6676;
+  --line: #D9E0E9;
+  --ice: #2366C4;
+  --ice-soft: #E3EEFC;
+  --cure: #1E8457;
+  --cure-soft: #E1F4EA;
+  --warn: #A65A00;
+  --warn-soft: #FFF1DC;
+  --bad: #B3261E;
+  --bad-soft: #FDE7E5;
+  --code-bg: #EEF2F7;
+  --hl-y: #FFF27A; --hl-g: #BDF5B8; --hl-o: #FFD29A; --hl-b: #C4E2FF; --hl-p: #FFC2DF; --paper-line: #E4EAF2;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11161D; --surface: #18202A; --ink: #E7ECF2; --muted: #9AA7B6; --line: #2C3644;
+  --ice: #7DB1F5; --ice-soft: #1C2D45; --cure: #6BD3A0; --cure-soft: #17352A;
+  --warn: #F2B35E; --warn-soft: #3A2A14; --bad: #FF8A80; --bad-soft: #3D1C1A; --code-bg: #0E131A;
+  --hl-y: #5C5414; --hl-g: #1F4D2B; --hl-o: #5E3C12; --hl-b: #1D3D61; --hl-p: #5E2446; --paper-line: #222B37; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #11161D; --surface: #18202A; --ink: #E7ECF2; --muted: #9AA7B6; --line: #2C3644;
+  --ice: #7DB1F5; --ice-soft: #1C2D45; --cure: #6BD3A0; --cure-soft: #17352A;
+  --warn: #F2B35E; --warn-soft: #3A2A14; --bad: #FF8A80; --bad-soft: #3D1C1A; --code-bg: #0E131A;
+  --hl-y: #5C5414; --hl-g: #1F4D2B; --hl-o: #5E3C12; --hl-b: #1D3D61; --hl-p: #5E2446; --paper-line: #222B37; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 17px; line-height: 1.6; }
+.wrap { max-width: 840px; margin: 0 auto; padding-block: 40px 80px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 6vw, 3rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 1.6rem; font-weight: 800; }
+h3 { font-size: 1.15rem; font-weight: 600; }
+p { margin: 0; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 62ch; }
+.eyebrow { font-family: var(--f-mono); font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+code { font-family: var(--f-mono); font-size: .88em; }
+:not(pre) > code { background: var(--code-bg); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 0; font-size: .85rem; line-height: 1.55; }
+pre code { font-size: inherit; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+section { margin-top: 64px; display: flex; flex-direction: column; gap: 18px; }
+ul, ol { margin: 0; padding-left: 1.3em; } li + li { margin-top: 4px; }
+a { color: var(--ice); }
+.dur { font-family: var(--f-mono); font-size: .8rem; color: var(--muted); font-weight: 400; }
+
+.status { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.status > div { background: var(--surface); padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.status .now { background: var(--ice-soft); }
+@media (max-width: 640px) { .status { grid-template-columns: 1fr; } }
+.total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-top: 20px; }
+.total b { font-family: var(--f-display); font-size: 1.5rem; }
+
+.phase-head { display: flex; gap: 14px; align-items: center; }
+.num { width: 48px; height: 48px; flex: none; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-display); font-weight: 800; font-size: 1.2rem; background: var(--surface); border: 2px solid var(--line); color: var(--muted); }
+.num.done { background: var(--cure); border-color: var(--cure); color: var(--surface); }
+.num.now { background: var(--ice); border-color: var(--ice); color: var(--surface); }
+.phase-head > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tag-now { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ice); font-weight: 600; }
+
+.story { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.story > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.story b { font-family: var(--f-display); }
+@media (max-width: 600px) { .story { grid-template-columns: 1fr; } }
+
+.diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; }
+.diagram svg { display: block; min-width: 560px; width: 100%; height: auto; }
+.d-iface { fill: var(--ice-soft); stroke: var(--ice); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.d-abs { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.5; }
+.d-con { fill: var(--cure-soft); stroke: var(--cure); stroke-width: 1.5; }
+.d-stack { fill: var(--ice-soft); stroke: var(--ice); stroke-width: 1.5; }
+.d-plain { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.d-null { fill: var(--code-bg); stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.d-zone { fill: none; stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 4; }
+.d-t { fill: var(--ink); font-family: var(--f-display); font-weight: 600; font-size: 15px; }
+.d-s { fill: var(--muted); font-family: var(--f-mono); font-size: 11px; }
+.d-m { fill: var(--ink); font-family: var(--f-mono); font-size: 12px; }
+.d-bad { fill: var(--bad); font-family: var(--f-body); font-weight: 700; font-size: 13px; }
+.d-ok { fill: var(--cure); font-family: var(--f-body); font-weight: 700; font-size: 13px; }
+.d-arrow { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+.d-ptr { stroke: var(--ice); stroke-width: 2; fill: none; }
+.d-ptr-bad { stroke: var(--bad); stroke-width: 2; fill: none; }
+.d-has { stroke: var(--ice); stroke-width: 1.5; fill: none; stroke-dasharray: 2 4; }
+.d-head { fill: var(--muted); } .d-head2 { fill: var(--ice); } .d-head3 { fill: var(--bad); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: .85rem; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.lg-i::before { background: var(--ice-soft); border: 1.5px dashed var(--ice); }
+.lg-a::before { background: var(--warn-soft); border: 1.5px solid var(--warn); }
+.lg-c::before { background: var(--cure-soft); border: 1.5px solid var(--cure); }
+.caption { font-size: .9rem; color: var(--muted); }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.card h3 .k { font-family: var(--f-mono); font-size: .8rem; color: var(--muted); font-weight: 400; margin-right: 6px; }
+.why { border-left: 3px solid var(--cure); padding: 2px 0 2px 12px; }
+.why::before { content: "À quoi ça sert ici : "; font-weight: 700; color: var(--cure); }
+.trap { background: var(--warn-soft); border-radius: 8px; padding: 10px 14px; }
+.trap::before { content: "Piège : "; font-weight: 700; color: var(--warn); }
+.tip { background: var(--ice-soft); border-radius: 8px; padding: 10px 14px; }
+.tip::before { content: "Astuce : "; font-weight: 700; color: var(--ice); }
+.alert { background: var(--bad-soft); border-radius: 8px; padding: 10px 14px; }
+.alert::before { content: "Refusé en évaluation : "; font-weight: 700; color: var(--bad); }
+.contra { background: var(--bad-soft); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.contra > b:first-child { color: var(--bad); }
+.group { font-family: var(--f-display); font-weight: 800; font-size: 1.25rem; margin-top: 12px; }
+
+details.q { border: 1px dashed var(--ice); border-radius: 8px; background: var(--ice-soft); }
+details.q summary { cursor: pointer; padding: 10px 14px; font-weight: 700; color: var(--ice); }
+details.q summary::marker { color: var(--ice); }
+details.q > div { padding: 0 14px 12px; }
+details.q > div::before { content: "Réponse : "; font-weight: 700; }
+
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: .95rem; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--f-mono); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.checks { list-style: none; padding: 16px; display: flex; flex-direction: column; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.checks li { margin: 0; }
+.checks .ttl { font-family: var(--f-mono); font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.checks label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.checks input { margin-top: 5px; width: 17px; height: 17px; accent-color: var(--cure); flex: none; }
+.checks input:checked + span { color: var(--muted); text-decoration: line-through; }
+input:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--ice); outline-offset: 2px; }
+
+.file { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.file-name { font-family: var(--f-mono); font-weight: 600; font-size: 1rem; color: var(--ice); }
+.kv { display: grid; grid-template-columns: 9.5em minmax(0,1fr); gap: 6px 14px; margin: 0; }
+.kv dt { font-weight: 700; color: var(--muted); font-size: .92rem; }
+.kv dd { margin: 0; min-width: 0; }
+@media (max-width: 560px) { .kv { grid-template-columns: 1fr; } .kv dd { margin-bottom: 6px; } }
+
+.progress { display: flex; align-items: center; gap: 12px; font-family: var(--f-mono); font-size: .85rem; color: var(--muted); }
+.bar { flex: 1; height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--cure); transition: width .3s; }
+@media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
+
+.paper { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 0;
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 31px, var(--paper-line) 31px, var(--paper-line) 32px); }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 8px 20px; padding: 12px 18px; border-bottom: 1px dashed var(--line); }
+.row:last-child { border-bottom: 0; }
+.row pre { background: transparent; border: 0; padding: 0; font-size: .9rem; white-space: pre-wrap; word-break: break-word; }
+.notes { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: .93rem; }
+.notes li { margin: 0; }
+.notes li::before { content: "→ "; color: var(--muted); }
+.m { padding: 1px 5px; border-radius: 3px; color: var(--ink); font-family: var(--f-mono); font-size: .88em; }
+.m.y { background: var(--hl-y); } .m.g { background: var(--hl-g); } .m.o { background: var(--hl-o); } .m.b { background: var(--hl-b); } .m.p { background: var(--hl-p); }
+.row pre .m { font-size: inherit; }
+@media (max-width: 700px) { .row { grid-template-columns: 1fr; } }
+
+/* Navigation une étape à la fois */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.steps { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; margin-top: 24px; border-bottom: 1px solid var(--line); }
+.steps-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+.steps a { flex: none; text-decoration: none; font-family: var(--f-mono); font-size: .8rem; padding: 6px 10px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); white-space: nowrap; }
+.steps a[aria-current="true"] { background: var(--ice); border-color: var(--ice); color: var(--surface); }
+.steps a.all { border-style: dashed; color: var(--muted); }
+.pager[hidden] { display: none; }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; flex-wrap: wrap; }
+.pager a { text-decoration: none; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-weight: 700; }
+.pager a[hidden] { display: none; }
+details.lock { border: 1px solid var(--warn); border-radius: 8px; background: var(--warn-soft); }
+details.lock summary { cursor: pointer; padding: 10px 14px; font-weight: 700; color: var(--warn); }
+details.lock summary::after { content: "  (seulement après avoir écrit le tien)"; font-weight: 400; color: var(--muted); }
+details.lock[open] summary::after { content: ""; }
+details.lock > div { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+pre.mission { background: var(--surface); border-style: dashed; }
+.card h4 { font-family: var(--f-display); font-size: 1rem; }
+.fn { border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.story { background: var(--cure-soft); border-radius: 8px; padding: 10px 14px; }
+.story::before { content: "Dans le jeu : "; font-weight: 700; color: var(--cure); }
+.hint { color: var(--muted); font-style: italic; }
+.hint::before { content: "Pour t'aider : "; font-weight: 700; font-style: normal; color: var(--ice); }
+pre.ex { background: var(--surface); }
+
+.wrap { max-width: 760px; }
+.pg { display: flex; flex-direction: column; gap: 16px; margin-top: 28px; }
+.pg + .pg { margin-top: 64px; }
+.pg hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; width: 100%; }
+.b { border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; border: 1px solid var(--line); background: var(--surface); }
+.b > b:first-child { font-family: var(--f-display); font-size: 1.02rem; }
+.b.story { background: var(--cure-soft); border-color: transparent; }
+.b.words { background: var(--ice-soft); border-color: transparent; }
+.b.tipb { background: var(--ice-soft); border-color: transparent; }
+.b.warnb { background: var(--warn-soft); border-color: transparent; }
+.b.you { border: 2px dashed var(--ice); }
+.b pre { background: var(--surface); }
+pre.ex { background: var(--surface); border-style: dashed; }
+details.lock { border: 1px solid var(--warn); border-radius: 8px; background: var(--warn-soft); }
+details.lock summary { cursor: pointer; padding: 12px 14px; font-weight: 700; color: var(--warn); }
+details.lock > div { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+details.q { border: 1px dashed var(--ice); border-radius: 8px; background: var(--ice-soft); }
+details.q summary { cursor: pointer; padding: 10px 14px; font-weight: 700; color: var(--ice); }
+details.q > div { padding: 0 14px 12px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.booknav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--line); display: flex; gap: 8px; align-items: center; margin-top: 20px; }
+.booknav select { flex: 1; min-width: 0; font: inherit; font-size: .95rem; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.booknav .count { font-family: var(--f-mono); font-size: .8rem; color: var(--muted); white-space: nowrap; }
+.btn { font: inherit; font-weight: 700; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn:disabled { opacity: .35; cursor: default; }
+.btn.primary { background: var(--ice); border-color: var(--ice); color: var(--surface); }
+.btn:focus-visible, select:focus-visible { outline: 2px solid var(--ice); outline-offset: 2px; }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 36px; flex-wrap: wrap; }
+.status { margin-top: 18px; }
+.fn { border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.fn h4 { font-family: var(--f-display); font-size: 1.02rem; margin: 0; }
+.b.story::before { content: none; }
+.pg[hidden] { display: none !important; }
+.pg { scroll-margin-top: 90px; }
+.tocpg { margin-top: 28px; display: flex; flex-direction: column; gap: 14px; }
+.tocpg[hidden] { display: none !important; }
+.tocch { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.tocch h3 { font-size: 1.05rem; }
+.tocch a { display: flex; gap: 10px; align-items: baseline; text-decoration: none; color: var(--ink); padding: 6px 8px; border-radius: 6px; }
+.tocch a:hover, .tocch a:focus-visible { background: var(--ice-soft); }
+.tocch a .n { font-family: var(--f-mono); font-size: .8rem; color: var(--muted); min-width: 2.2em; }
+.tocch a .ok { margin-left: auto; color: var(--cure); font-weight: 700; }
+.tocch a.here { background: var(--ice-soft); font-weight: 700; }
+#tocBtn[aria-pressed="true"] { background: var(--ice); border-color: var(--ice); color: var(--surface); }
+@media (max-width: 480px) { #tocBtn { padding: 8px 10px; } .booknav .count { display: none; } }
+.remind-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.remind-btns a.btn { text-decoration: none; }
+</style>
+
+<div class="wrap">
+  <header class="stack">
+    <span class="eyebrow">CPP05 · ex00 → ex03 · Répétition et Exceptions · environ 12 h</span>
+    <h1>Le livre CPP05</h1>
+    <div class="b warnb remind"><b>📌 À ne pas oublier</b>
+      <p>Ta méthode est enregistrée dans la compétence <code>livre-apprentissage-42</code>. <b>Garde-la activée.</b></p>
+      <p><b>Où la trouver :</b> dans Claude, <b>Customize → Skills</b> → <code>livre-apprentissage-42</code> (interrupteur activé).</p>
+      <div class="remind-btns">
+        <button class="btn primary" id="goMethod" type="button">📖 Relire la méthode</button>
+        <a class="btn" href="https://support.claude.com/en/articles/12512180-use-skills-in-claude" target="_blank" rel="noopener">Aide : les compétences ↗</a>
+      </div>
+    </div>
+    <div class="status" aria-label="Où on en est">
+      <div><span class="eyebrow">Objectif</span><p>Des bureaucrates qui signent et exécutent des formulaires, et qui lancent une alarme (exception) quand quelque chose est interdit.</p></div>
+      <div class="now"><span class="eyebrow">Où tu en es</span><p>Intro.</p></div>
+      <div><span class="eyebrow">Prochaine action</span><p>Page 3 : l'histoire de l'administration.</p></div>
+    </div>
+    <div class="total"><b>4 exercices</b><span class="dur">ex00 ≈ 4 h · ex01 ≈ 2 h · ex02 ≈ 4 h · ex03 ≈ 2 h</span></div>
+    <div class="progress"><div class="bar"><i id="bar"></i></div><span id="pct">0 / 0</span></div>
+  </header>
+
+  <nav class="booknav" aria-label="Pages du livre">
+    <button class="btn" id="tocBtn" type="button">☰ Sommaire</button>
+    <button class="btn" id="prevT" type="button" aria-label="Page précédente">←</button>
+    <select id="menu" aria-label="Aller à la page"></select>
+    <span class="count" id="count"></span>
+    <button class="btn primary" id="nextT" type="button" aria-label="Page suivante">→</button>
+  </nav>
+
+<section id="sommaire" class="tocpg" hidden>
+  <span class="eyebrow">Sommaire</span>
+  <h2>Toutes les pages du livre</h2>
+  <p class="caption">Clique sur une page pour y aller. ✓ = page cochée « faite et comprise ».</p>
+  <div id="toc"></div>
+</section>
+
+<article class="pg" id="m1" data-ch="Méthode" data-t="La compétence livre-apprentissage-42">
+  <span class="eyebrow">Méthode · compétence livre-apprentissage-42</span>
+  <h2>La méthode du livre d'apprentissage 42</h2>
+  <div class="b tipb"><b>🚀 Pour démarrer un nouveau projet</b>
+    <p>Écris à Claude :</p>
+<pre><code>Utilise ma compétence livre-apprentissage-42 pour me faire
+le livre du [MODULE exNN]. Voici le sujet, la grille et le modèle.</code></pre>
+    <p>Joins : le sujet (PDF), la grille de correction, ce modèle, et tes CLAUDE.md / SPEC.md / NOTES.md si tu en as.</p>
+  </div>
+
+  <div class="b steps"><b>1. Règles de fond</b>
+    <ul>
+      <li>Jamais le code de l'exercice. Code complet seulement si j'écris « donne-moi le code ».</li>
+      <li>Phrases courtes. Une phrase = une idée. Mots simples.</li>
+      <li>Toujours une <b>histoire</b> et des images concrètes (sac à poches, livre de recettes, photocopieuse, boîte et étiquette).</li>
+      <li>Claude se relit comme une débutante : chaque mot technique est expliqué, avec un exemple.</li>
+      <li>Claude conteste mes choix quand c'est faux et signale ce qui serait refusé en évaluation.</li>
+      <li>Fin de chaque réponse : <b>Objectif / Étape actuelle / Prochaine action</b>.</li>
+      <li>Si je pose une question : réponse, puis on reprend au même endroit.</li>
+      <li>Aucun identifiant personnel dans les fichiers.</li>
+    </ul>
+  </div>
+
+  <div class="b steps"><b>2. Avant de construire</b>
+    <ol>
+      <li>Lire le sujet, la grille et mes fichiers de projet. Le sujet et la grille ont le dernier mot.</li>
+      <li>Trouver l'histoire du sujet et son vrai but caché.</li>
+      <li>Me proposer le plan (la liste des pages). On construit seulement après mon « go ».</li>
+    </ol>
+  </div>
+
+  <div class="b steps"><b>3. Structure du livre (une page = une fonction)</b>
+    <ol>
+      <li><b>Intro</b> : l'histoire, le rôle de chaque classe, la carte, le main du sujet en blocs.</li>
+      <li><b>Squelette</b> : .hpp / .cpp, <code>#include</code> ou <code>class X;</code>, chaque .hpp, compiler (avec <code>(void)nom;</code> et des <code>return</code> provisoires).</li>
+      <li><b>Un chapitre par .cpp</b>, dans l'ordre de codage. Les pages suivent <b>l'ordre du .hpp</b>.</li>
+      <li><b>Tests</b> : le main du sujet + un main simple, tout dans <code>main</code>, vérifié avec valgrind.</li>
+      <li><b>Récap des messages d'erreur</b> : un tableau Fichier / Fonction / Quand / ligne <code>std::cerr</code>.</li>
+      <li><b>Annexe</b> : grille, fiche de soutenance, erreurs fréquentes, main annoté.</li>
+    </ol>
+    <p>Les notions arrivent <b>dans la page qui en a besoin</b>. Pas d'allers-retours.</p>
+  </div>
+
+  <div class="b steps"><b>4. Format d'une page</b>
+    <p>🎮 histoire · 📖 mots nouveaux · ✅ étapes · 🎒 exemple · ⚠️ piège · 💡 astuce · 💬 message d'erreur · ✍️ à toi · 🔒 pseudo-code verrouillé · ❓ question · ☐ case à cocher.</p>
+    <p>Plus : une table 🌍 traductions anglais → français, une ligne 🗣️ « Se lit » pour chaque déclaration nouvelle, un rappel 📏 convention quand on nomme quelque chose, et des schémas mémoire pour les pointeurs et les copies.</p>
+  </div>
+
+  <div class="b steps"><b>5. Technique</b>
+    <ul>
+      <li>Une page visible à la fois, sommaire cliquable avec ✓, menu ← →, progression gardée dans le navigateur.</li>
+      <li>Après chaque changement : republier la page et me renvoyer <code>ROADMAP.html</code> pour mon dossier.</li>
+      <li>Dans mon CLAUDE.md : « ne jamais montrer les blocs Déverrouiller avant que j'aie montré mon pseudo-code ».</li>
+    </ul>
+  </div>
+
+  <div class="b steps"><b>6. Pendant que je code</b>
+    <ul>
+      <li>Claude lit mon code, trouve le problème principal, explique, donne un indice. Pas la correction.</li>
+      <li>Erreur de compilation : traduite en français simple, avec où regarder.</li>
+      <li>Comportement bizarre : lldb (<code>-g</code>, b, r, n, s, p, up, bt).</li>
+      <li>Une page floue ou fausse : Claude le reconnaît et la corrige.</li>
+      <li>À la fin : grille, simulation de défense (5 questions), tests qui cassent le code.</li>
+    </ul>
+  </div>
+</article>
+
+<article class="pg" id="m2" data-ch="Méthode" data-t="Conventions et lecture du code">
+  <span class="eyebrow">Méthode · à garder sous la main</span>
+  <h2>Conventions et lecture du code</h2>
+
+  <div class="b story"><b>🎮 L'idée</b>
+    <p>Une <b>convention</b>, c'est une habitude que tout le monde suit. Le compilateur s'en moque, mais le correcteur la remarque.</p>
+    <p>Suivre les conventions, c'est rendre ton code facile à lire pour les autres.</p>
+  </div>
+
+  <div class="b steps"><b>📏 Les noms</b>
+    <div class="tbl"><table>
+      <thead><tr><th>Quoi</th><th>Convention</th><th>Exemple</th></tr></thead>
+      <tbody>
+        <tr><td>Classe</td><td>Majuscule à chaque mot</td><td><code>Character</code>, <code>MateriaSource</code></td></tr>
+        <tr><td>Classe abstraite</td><td>préfixe <code>A</code></td><td><code>AMateria</code></td></tr>
+        <tr><td>Interface</td><td>préfixe <code>I</code></td><td><code>ICharacter</code></td></tr>
+        <tr><td>Attribut <code>private</code> / <code>protected</code></td><td><code>_</code> devant, puis minuscule</td><td><code>_name</code>, <code>_recipePages</code></td></tr>
+        <tr><td>Fonction, variable, paramètre</td><td>minuscule, puis Majuscule à chaque mot</td><td><code>getName</code>, <code>createMateria</code></td></tr>
+        <tr><td>Getter / setter</td><td><code>get</code> + nom / <code>set</code> + nom</td><td><code>getType()</code>, <code>setName()</code></td></tr>
+        <tr><td>Garde d'inclusion</td><td>MAJUSCULES + <code>_HPP</code></td><td><code>ICE_HPP</code></td></tr>
+        <tr><td>Fichiers</td><td>le nom de la classe</td><td><code>Ice.hpp</code> + <code>Ice.cpp</code></td></tr>
+        <tr><td>Paramètre d'une copie</td><td><code>other</code> (ou <code>src</code>, <code>copy</code>)</td><td><code>Character(Character const &amp; other)</code></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="b words"><b>📖 Pourquoi le <code>_</code> devant les attributs ?</b>
+    <ul>
+      <li>Ce n'est <b>pas obligatoire</b> : c'est une convention, très utilisée à 42.</li>
+      <li>Ça permet de voir tout de suite : <code>_name</code> = l'attribut de l'objet, <code>name</code> = le paramètre reçu.</li>
+      <li>Exemple : <code>_name = name;</code> → « je range le nom reçu dans mon attribut ».</li>
+    </ul>
+  </div>
+  <div class="b warnb"><b>⚠️ Piège</b><p>Jamais deux <code>__</code>, ni <code>_</code> suivi d'une majuscule (<code>_Name</code>). Ces noms sont réservés au C++.</p></div>
+
+  <div class="b steps"><b>🗣️ Lire une déclaration à voix haute</b>
+    <p><b>La règle :</b> on lit <b>de droite à gauche</b>, en partant du nom.</p>
+    <ul>
+      <li><code>*</code> se lit « <b>pointeur vers</b> »</li>
+      <li><code>&amp;</code> se lit « <b>référence vers</b> »</li>
+      <li><code>const</code> se lit « <b>constant</b> » (on ne peut pas le modifier)</li>
+    </ul>
+    <div class="tbl"><table>
+      <thead><tr><th>Ce que tu écris</th><th>Ça se lit</th></tr></thead>
+      <tbody>
+        <tr><td><code>int x</code></td><td>x est un int</td></tr>
+        <tr><td><code>int* p</code></td><td>p est un pointeur vers un int (p contient une adresse)</td></tr>
+        <tr><td><code>int&amp; r</code></td><td>r est une référence vers un int (un 2ᵉ nom pour la même variable)</td></tr>
+        <tr><td><code>const int&amp; v</code></td><td>v est une référence vers un int constant</td></tr>
+        <tr><td><code>int const &amp; v</code></td><td>pareil : v est une référence vers un int constant</td></tr>
+        <tr><td><code>const int* p</code></td><td>p est un pointeur vers un int constant (on ne peut pas changer la valeur)</td></tr>
+        <tr><td><code>int* const p</code></td><td>p est un pointeur constant vers un int (on ne peut pas changer l'adresse)</td></tr>
+        <tr><td><code>AMateria* _inventory[4]</code></td><td>_inventory est un tableau de 4 pointeurs vers AMateria</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="b warnb"><b>⚠️ Le piège du <code>&amp;</code> : deux sens différents</b>
+    <ul>
+      <li><b>Dans une déclaration</b> (avec un type devant) : <code>int&amp; r</code> → « référence vers ».</li>
+      <li><b>Dans une expression</b> (devant une variable) : <code>&amp;x</code> → « l'<b>adresse</b> de x ». Par exemple : <code>if (this == &amp;other)</code>.</li>
+    </ul>
+  </div>
+
+  <div class="b tipb"><b>💡 Pourquoi <code>const int&amp;</code> partout dans les paramètres ?</b>
+    <ul>
+      <li><code>&amp;</code> : on ne <b>copie</b> pas l'objet, on le prête. C'est plus rapide.</li>
+      <li><code>const</code> : la fonction promet de <b>ne pas le modifier</b>. C'est plus sûr.</li>
+      <li>Donc : « je te prête mon objet, en lecture seule ».</li>
+    </ul>
+  </div>
+
+  <div class="b steps"><b>🗣️ Les fonctions classiques, lues à voix haute</b>
+    <div class="tbl"><table>
+      <thead><tr><th>Ce que tu écris</th><th>Ça se lit</th></tr></thead>
+      <tbody>
+        <tr><td><code>std::string const &amp; getName() const;</code></td><td>getName renvoie une référence vers une string constante. Le <code>const</code> de la fin : elle ne modifie pas l'objet.</td></tr>
+        <tr><td><code>Character(Character const &amp; other);</code></td><td>constructeur de copie : il reçoit une référence vers un Character constant</td></tr>
+        <tr><td><code>Character &amp; operator=(Character const &amp; other);</code></td><td>l'opérateur = reçoit une référence vers un Character constant, et renvoie une référence vers moi-même</td></tr>
+        <tr><td><code>virtual AMateria* clone() const = 0;</code></td><td>clone est une fonction virtuelle pure, constante, qui renvoie un pointeur vers AMateria</td></tr>
+        <tr><td><code>void use(ICharacter&amp; target);</code></td><td>use reçoit une référence vers un ICharacter (modifiable), et ne renvoie rien</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <details class="q"><summary>❓ Question : comment se lit <code>MateriaSource const &amp; other</code> ?</summary><div>other est une référence vers un MateriaSource constant.</div></details>
+  <ul class="checks"><li><label><input type="checkbox" id="m2c"><span>Page lue et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="i1" data-ch="Intro" data-t="L&#x27;histoire de l&#x27;administration">
+<span class="eyebrow">Intro · 5 min</span><h2>L'histoire de l'administration</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Imagine une immense administration. Des bureaux, des couloirs, des files d'attente.</p><p>Chaque employé est un <b>bureaucrate</b>. Il a un nom et une <b>note</b> (grade).</p><p>La note 1, c'est le grand chef. La note 150, c'est tout en bas.</p><p>Les bureaucrates <b>signent</b> et <b>exécutent</b> des formulaires. Mais seulement s'ils ont la note suffisante.</p><p>Si quelqu'un essaie une chose interdite, une <b>alarme</b> sonne. En C++, cette alarme s'appelle une <b>exception</b>.</p></div>
+<div class="tbl"><table><thead><tr><th>Exercice</th><th>Ce que tu ajoutes</th><th>La nouvelle idée</th></tr></thead><tbody><tr><td>ex00</td><td><code>Bureaucrat</code></td><td>lancer et attraper une exception</td></tr><tr><td>ex01</td><td><code>Form</code></td><td>deux classes qui se connaissent</td></tr><tr><td>ex02</td><td><code>AForm</code> + 3 formulaires</td><td>classe abstraite : le parent vérifie, l'enfant agit</td></tr><tr><td>ex03</td><td><code>Intern</code></td><td>tableau de pointeurs sur fonctions membres</td></tr></tbody></table></div>
+<div class="b warnb"><b>⚠️ Piège</b><p>La note marche à l'envers. <b>Monter</b> en grade = le nombre <b>baisse</b>. Une note 3 qui monte devient 2.</p></div>
+<details class="q"><summary>❓ Question : Un bureaucrate de note 40 veut signer un formulaire qui demande 50. Il peut ?</summary><div>Oui. 40 est plus haut que 50 (plus petit = plus fort).</div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-i1"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="i2" data-ch="Intro" data-t="La carte des classes">
+<span class="eyebrow">Intro · 5 min</span><h2>La carte des classes</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Chaque classe a un seul rôle.</p><p><code>Bureaucrat</code> : la personne. <code>AForm</code> : le modèle de formulaire. Les 3 formulaires : les vrais papiers. <code>Intern</code> : le stagiaire qui remplit les papiers.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><b>classe concrète</b> : on peut créer un objet avec (<code>Bureaucrat bob("Bob", 2);</code>).</li><li><b>classe abstraite</b> : un modèle incomplet. On ne peut pas créer d'objet avec. Seulement ses enfants.</li><li><b>exception</b> : un objet « alarme » qu'on lance quand une règle est cassée.</li></ul></div>
+<div class="diagram"><svg viewBox="0 0 760 330" role="img" aria-label="Carte des classes du CPP05">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="d-head"/></marker>
+<marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="d-head2"/></marker></defs>
+<rect x="20" y="20" width="200" height="70" rx="8" class="d-con"/><text x="120" y="50" text-anchor="middle" class="d-t">Bureaucrat</text><text x="120" y="70" text-anchor="middle" class="d-s">ex00 · nom + note</text>
+<rect x="290" y="20" width="200" height="70" rx="8" class="d-abs"/><text x="390" y="50" text-anchor="middle" class="d-t">AForm</text><text x="390" y="70" text-anchor="middle" class="d-s">ex01 Form → ex02 AForm</text>
+<rect x="560" y="20" width="180" height="70" rx="8" class="d-plain"/><text x="650" y="50" text-anchor="middle" class="d-t">Intern</text><text x="650" y="70" text-anchor="middle" class="d-s">ex03 · makeForm()</text>
+<path d="M220 45 L288 45" class="d-ptr" marker-end="url(#ah2)"/><text x="254" y="38" text-anchor="middle" class="d-s">signe</text>
+<path d="M220 68 L288 68" class="d-ptr" marker-end="url(#ah2)"/><text x="254" y="84" text-anchor="middle" class="d-s">exécute</text>
+<path d="M560 55 L492 55" class="d-has" marker-end="url(#ah2)"/><text x="526" y="48" text-anchor="middle" class="d-s">crée</text>
+<rect x="20" y="210" width="220" height="80" rx="8" class="d-con"/><text x="130" y="240" text-anchor="middle" class="d-t">ShrubberyCreation</text><text x="130" y="260" text-anchor="middle" class="d-s">145 / 137</text><text x="130" y="278" text-anchor="middle" class="d-s">écrit des arbres</text>
+<rect x="270" y="210" width="220" height="80" rx="8" class="d-con"/><text x="380" y="240" text-anchor="middle" class="d-t">RobotomyRequest</text><text x="380" y="260" text-anchor="middle" class="d-s">72 / 45</text><text x="380" y="278" text-anchor="middle" class="d-s">50 % de réussite</text>
+<rect x="520" y="210" width="220" height="80" rx="8" class="d-con"/><text x="630" y="240" text-anchor="middle" class="d-t">PresidentialPardon</text><text x="630" y="260" text-anchor="middle" class="d-s">25 / 5</text><text x="630" y="278" text-anchor="middle" class="d-s">grâce de Zaphod</text>
+<path d="M130 208 L370 92" class="d-arrow" marker-end="url(#ah)"/><path d="M380 208 L388 92" class="d-arrow" marker-end="url(#ah)"/><path d="M630 208 L410 92" class="d-arrow" marker-end="url(#ah)"/>
+<text x="560" y="160" class="d-s">hérite de (ex02)</text>
+</svg></div>
+<div class="legend"><span class="lg-c">classe concrète</span><span class="lg-a">classe abstraite</span></div>
+<p class="caption">Les nombres : note pour signer / note pour exécuter.</p>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>Tu connais déjà l'héritage et les classes abstraites grâce au CPP04. Ici, c'est la même idée avec <code>AForm</code>.</p></div>
+<details class="q"><summary>❓ Question : Qui crée les formulaires dans l'ex03 ?</summary><div>Le stagiaire (<code>Intern</code>), avec <code>makeForm()</code>.</div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-i2"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="i3" data-ch="Intro" data-t="Les règles du module">
+<span class="eyebrow">Intro · 5 min</span><h2>Les règles du module</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Avant de coder, voici les règles qui font perdre des points si on les oublie.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><b>forme canonique orthodoxe</b> (OCF) : les 4 fonctions de base qu'une classe doit toujours avoir.</li></ul></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Compiler avec <code>c++ -Wall -Wextra -Werror -std=c++98</code>.</li><li>Chaque classe (sauf les exceptions) en <b>forme canonique</b> : constructeur par défaut, copie, <code>operator=</code>, destructeur.</li><li>Aucun code dans les <code>.hpp</code>. Gardes d'inclusion partout.</li><li>Interdits : <code>printf</code>, <code>malloc</code>, <code>free</code>, <code>using namespace</code>, <code>friend</code>, la STL (<code>vector</code>, <code>map</code>…).</li><li>Un <code>main</code> avec assez de tests, sinon l'exercice n'est pas noté.</li></ol></div>
+<div class="b warnb"><b>⚠️ Piège</b><p>Pas de <code>friend</code> pour <code>operator&lt;&lt;</code>. Il doit utiliser les getters.</p></div>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>Chaque exercice part du précédent. Quand l'ex00 marche : <code>cp -r ex00 ex01</code>, puis on ajoute.</p></div>
+<ul class="checks"><li><label><input type="checkbox" id="c-i3"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="s0a" data-ch="ex00 · Squelette" data-t="Les fichiers et le Makefile">
+<span class="eyebrow">Chapitre 1 · ex00 · 15 min</span><h2>Les fichiers et le Makefile</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Le bureau est vide. On pose d'abord les meubles : les fichiers.</p></div>
+<div class="b tipb"><b>📏 Convention</b><p>Fichiers = nom de la classe : <code>Bureaucrat.hpp</code> + <code>Bureaucrat.cpp</code>.</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Crée le dossier <code>ex00/</code>.</li><li>Crée 4 fichiers : <code>Makefile</code>, <code>main.cpp</code>, <code>Bureaucrat.hpp</code>, <code>Bureaucrat.cpp</code>.</li><li>Dans le Makefile : <code>CXX = c++</code> et <code>CXXFLAGS = -Wall -Wextra -Werror -std=c++98</code>.</li><li>Règles : <code>all</code>, <code>clean</code>, <code>fclean</code>, <code>re</code>. Nom du programme : celui que tu veux (ex. <code>bureaucrat</code>).</li></ol></div>
+<div class="b warnb"><b>⚠️ Piège</b><p>Un Makefile qui compile avec <code>g++</code> ou sans les flags : l'exercice n'est pas noté.</p></div>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>C'est le même Makefile que dans tes modules CPP précédents. Copie-le et change les noms.</p></div>
+<ul class="checks"><li><label><input type="checkbox" id="c-s0a"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="s0b" data-ch="ex00 · Squelette" data-t="Bureaucrat.hpp : la classe">
+<span class="eyebrow">Chapitre 1 · ex00 · Bureaucrat.hpp · 30 min</span><h2>Bureaucrat.hpp : la classe</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>On écrit la « fiche de poste » du bureaucrate : ce qu'il a, et ce qu'il sait faire.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>std::string const _name;</code> → 🗣️ <b>Se lit :</b> « _name est une string constante ». Elle ne changera jamais.</li><li><code>int _grade;</code> → la note, de 1 à 150.</li><li><code>Bureaucrat(std::string const &amp; name, int grade);</code> → 🗣️ <b>Se lit :</b> « constructeur qui reçoit une référence vers une string constante, et un int ».</li><li><code>int getGrade() const;</code> → 🗣️ <b>Se lit :</b> « getGrade renvoie un int. Le <code>const</code> de la fin : elle ne modifie pas l'objet ».</li></ul></div>
+<div class="b tipb"><b>📏 Convention</b><p>Attributs : <code>_name</code>, <code>_grade</code>. Fonctions : <code>getName</code>, <code>getGrade</code>, <code>incrementGrade</code>, <code>decrementGrade</code>.</p></div>
+<div class="b words"><b>🌍 Traductions (anglais → français)</b><div class="tbl"><table><thead><tr><th>Dans le code</th><th>En français</th></tr></thead><tbody><tr><td><code>Bureaucrat</code></td><td>le bureaucrate</td></tr><tr><td><code>name</code></td><td>le nom</td></tr><tr><td><code>grade</code></td><td>la note, le rang</td></tr><tr><td><code>increment</code> / <code>decrement</code></td><td>augmenter / diminuer</td></tr><tr><td><code>GradeTooHigh</code> / <code>GradeTooLow</code></td><td>note trop haute / trop basse</td></tr></tbody></table></div></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Garde d'inclusion : <code>BUREAUCRAT_HPP</code>.</li><li><code>#include &lt;string&gt;</code> et <code>#include &lt;iostream&gt;</code> (pour <code>std::ostream</code>). Plus tard : <code>&lt;exception&gt;</code>.</li><li>En <code>private</code> : <code>_name</code> (constant) et <code>_grade</code>.</li><li>En <code>public</code> : les 4 fonctions de la forme canonique, le constructeur (nom, note), les 2 getters, <code>incrementGrade()</code>, <code>decrementGrade()</code>.</li><li><b>Après</b> la classe (en dehors) : la déclaration de <code>operator&lt;&lt;</code>.</li></ol></div>
+<div class="b warnb"><b>⚠️ Piège</b><p><code>operator&lt;&lt;</code> n'est <b>pas</b> dans la classe. Il est déclaré juste après, dans le même <code>.hpp</code>.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>classe Bureaucrat
+  privé :
+    nom constant (string)
+    note (int)
+  public :
+    constructeur par défaut
+    constructeur (nom, note)
+    constructeur de copie (référence vers Bureaucrat constant)
+    opérateur = (référence vers Bureaucrat constant) -&gt; renvoie moi-même
+    destructeur
+    getName  -&gt; renvoie référence vers string constante, const
+    getGrade -&gt; renvoie int, const
+    incrementGrade()   (rien en retour)
+    decrementGrade()
+    [les 2 classes d'exception : page suivante]
+fin de classe
+
+en dehors : operator&lt;&lt; (flux de sortie, Bureaucrat constant) -&gt; renvoie le flux</code></pre></div></details>
+<details class="q"><summary>❓ Question : Pourquoi le nom est <code>const</code> ?</summary><div>Le sujet le demande : un bureaucrate ne change jamais de nom.</div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-s0b"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="s0c" data-ch="ex00 · Squelette" data-t="Les classes d&#x27;exception dans le .hpp">
+<span class="eyebrow">Chapitre 1 · ex00 · Bureaucrat.hpp · 30 min</span><h2>Les classes d'exception dans le .hpp</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Une exception, c'est une <b>alarme</b>. Chaque alarme a sa propre sonnerie.</p><p>Ici, deux alarmes : « note trop haute » et « note trop basse ». On les range <b>dans</b> la classe Bureaucrat, comme deux boutons rouges sur son bureau.</p></div>
+<div class="b tipb"><b>🎬 Vidéo</b><p><a href="https://www.youtube.com/watch?v=HVjB-tNKZZo" target="_blank" rel="noopener">Piscine C++ D05 00 : les classes imbriquées ↗</a> <span class="dur">0:42</span></p><p>Regarde-la avant cette page.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>std::exception</code> : la classe parent de toutes les alarmes standard (dans <code>&lt;exception&gt;</code>).</li><li><b>classe imbriquée</b> : une classe écrite à l'intérieur d'une autre. Nom complet : <code>Bureaucrat::GradeTooHighException</code>.</li><li><code>what()</code> : la fonction qui renvoie le texte de l'alarme.</li><li><code>virtual const char* what() const throw();</code> → 🗣️ <b>Se lit :</b> « what est virtuelle, constante, promet de ne lancer aucune exception (<code>throw()</code>), et renvoie un pointeur vers des char constants ».</li></ul></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Ajoute <code>#include &lt;exception&gt;</code>.</li><li>Dans la partie <code>public</code> de Bureaucrat, écris la classe <code>GradeTooHighException</code>, qui hérite publiquement de <code>std::exception</code>.</li><li>Dedans, en public : seulement la déclaration de <code>what()</code> (signature ci-dessus).</li><li>Fais pareil pour <code>GradeTooLowException</code>.</li></ol></div>
+<div class="b warnb"><b>⚠️ Piège</b><p>Oublier <code>throw()</code> à la fin de <code>what()</code> → erreur « looser throw specifier ». En C++98, l'enfant doit promettre au moins autant que <code>std::exception</code>.</p></div>
+<div class="b warnb"><b>⚠️ Piège</b><p>Pas de <code>noexcept</code> ni <code>override</code> : c'est du C++11, interdit.</p></div>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>Le sujet le dit : les classes d'exception <b>n'ont pas besoin</b> de la forme canonique.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>dans la partie public de Bureaucrat :
+  classe GradeTooHighException, enfant public de std::exception
+    public : what() virtuelle, const, throw(), renvoie const char*
+  fin
+  classe GradeTooLowException, pareil
+  fin</code></pre></div></details>
+<details class="q"><summary>❓ Question : Pourquoi hériter de <code>std::exception</code> ?</summary><div>Pour pouvoir attraper l'alarme avec <code>catch (std::exception &amp; e)</code>. La grille le vérifie.</div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-s0c"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="s0d" data-ch="ex00 · Squelette" data-t="Compiler le squelette">
+<span class="eyebrow">Chapitre 1 · ex00 · Bureaucrat.cpp · 20 min</span><h2>Compiler le squelette</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Les meubles sont posés. On vérifie que la porte s'ouvre : ça compile ?</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><b>liste d'initialisation</b> : le <code>: _name(name), _grade(grade)</code> écrit entre la <code>)</code> et le <code>{</code> du constructeur. C'est le seul endroit où on peut remplir un attribut <code>const</code>.</li></ul></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Dans <code>Bureaucrat.cpp</code> : <code>#include "Bureaucrat.hpp"</code>.</li><li>Écris toutes les fonctions avec un corps vide <code>{ }</code>.</li><li>Paramètre pas encore utilisé → <code>(void)nom;</code> (sinon <code>unused parameter</code> avec -Wextra -Werror).</li><li>Fonction qui renvoie quelque chose → <code>return</code> provisoire (ex. <code>return _grade;</code>, <code>return *this;</code>).</li><li>Le constructeur doit quand même initialiser <code>_name</code> (il est <code>const</code>) : liste d'initialisation obligatoire.</li><li><code>main.cpp</code> avec un <code>main</code> vide qui renvoie 0. Puis <code>make</code>.</li></ol></div>
+<pre class="ex"><code>🎒 Bureaucrat::getGrade      -&gt; return _grade;
+Bureaucrat::operator=     -&gt; return *this;
+GradeTooHighException::what -&gt; return "";</code></pre>
+<div class="b warnb"><b>⚠️ Piège</b><p>Les noms complets ! Dans le .cpp : <code>Bureaucrat::getGrade</code>, et pour what : <code>Bureaucrat::GradeTooHighException::what</code>.</p></div>
+<details class="q"><summary>❓ Question : Pourquoi on ne peut pas écrire <code>_name = name;</code> dans les <code>{ }</code> ?</summary><div>Parce que <code>_name</code> est constant : il est déjà « fabriqué » quand on entre dans <code>{ }</code>. On ne peut plus le changer.</div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-s0d"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="b1" data-ch="ex00 · Bureaucrat.cpp" data-t="Constructeur par défaut">
+<span class="eyebrow">Chapitre 2 · ex00 · Bureaucrat.cpp · 10 min</span><h2>Constructeur par défaut</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Un bureaucrate sans nom ni note arrive. On lui donne des valeurs de départ sûres.</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Liste d'initialisation : nom <code>"Default"</code>, note <code>150</code> (la plus basse).</li><li>Optionnel : un <code>std::cout</code> « Bureaucrat default constructor called ».</li></ol></div>
+<pre class="ex"><code>🎒 Bureaucrat b;
+-&gt; [ nom: "Default" | note: 150 ]</code></pre>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>150 est toujours valide. Pas besoin de vérifier.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>constructeur par défaut :
+  nom &lt;- "Default"   (dans la liste d'initialisation)
+  note &lt;- 150</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-b1"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="b2" data-ch="ex00 · Bureaucrat.cpp" data-t="Constructeur (nom, note) : lancer l&#x27;alarme">
+<span class="eyebrow">Chapitre 2 · ex00 · Bureaucrat.cpp · 30 min</span><h2>Constructeur (nom, note) : lancer l'alarme</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Un nouveau bureaucrate arrive avec une note. Le gardien vérifie.</p><p>Note 0 ou 151 ? Le gardien <b>lance l'alarme</b>. Le bureaucrate n'est jamais créé.</p></div>
+<div class="b tipb"><b>🎬 Vidéo</b><p><a href="https://www.youtube.com/watch?v=BIs4BRM7s-s" target="_blank" rel="noopener">Piscine C++ D05 01 : les exceptions ↗</a> <span class="dur">8:42</span></p><p>Regarde-la avant cette page.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>throw</code> : lancer l'alarme. Exemple : <code>throw GradeTooHighException();</code> → on crée un objet alarme et on le lance.</li><li>Quand on <code>throw</code>, la fonction s'arrête <b>tout de suite</b>. Le code d'après n'est pas exécuté.</li><li>Un constructeur qui lance → l'objet n'existe pas. Son destructeur ne sera pas appelé.</li></ul></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Liste d'initialisation : <code>_name</code> reçoit <code>name</code>, <code>_grade</code> reçoit <code>grade</code>.</li><li>Dans <code>{ }</code> : si la note est plus petite que 1 → lancer <code>GradeTooHighException</code>.</li><li>Si la note est plus grande que 150 → lancer <code>GradeTooLowException</code>.</li></ol></div>
+<div class="diagram"><svg viewBox="0 0 640 250" role="img" aria-label="Une exception remonte jusqu'au catch">
+<defs><marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="d-head3"/></marker>
+<marker id="ah4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="d-head"/></marker></defs>
+<rect x="20" y="20" width="330" height="210" rx="8" class="d-plain"/><text x="36" y="44" class="d-t">main</text>
+<rect x="40" y="58" width="290" height="96" rx="6" class="d-stack"/><text x="54" y="80" class="d-m">try {</text>
+<text x="70" y="104" class="d-m">Bureaucrat bob("Bob", 0);</text><text x="54" y="140" class="d-m">}</text>
+<rect x="40" y="166" width="290" height="50" rx="6" class="d-con"/><text x="54" y="188" class="d-m">catch (std::exception &amp; e)</text><text x="54" y="206" class="d-ok">→ on affiche e.what()</text>
+<rect x="400" y="58" width="220" height="96" rx="6" class="d-abs"/><text x="414" y="82" class="d-t">constructeur</text><text x="414" y="104" class="d-m">grade = 0 &lt; 1</text><text x="414" y="128" class="d-bad">throw TooHigh !</text>
+<path d="M330 100 L398 100" class="d-arrow" marker-end="url(#ah4)"/><text x="364" y="92" text-anchor="middle" class="d-s">appel</text>
+<path d="M510 156 C 510 200, 420 200, 332 192" class="d-ptr-bad" marker-end="url(#ah3)"/><text x="470" y="214" class="d-bad">l'alarme remonte</text>
+</svg></div>
+<p class="caption">Le reste du bloc <code>try</code> est sauté. Le programme reprend dans le <code>catch</code>.</p>
+<pre class="ex"><code>🎒 Bureaucrat("Bob", 0)   -&gt; throw TooHigh   (0 est « au-dessus » de 1)
+Bureaucrat("Bob", 151) -&gt; throw TooLow
+Bureaucrat("Bob", 42)  -&gt; [ Bob | 42 ] créé</code></pre>
+<div class="b warnb"><b>⚠️ Piège</b><p>Note <b>trop petite</b> (0) = trop <b>haute</b>. Ne mélange pas les deux alarmes.</p></div>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>Pour éviter les nombres magiques, tu peux écrire 1 et 150 une seule fois (constantes <code>static const int</code> dans la classe, ou <code>#define</code>). Au choix.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>constructeur (nom, note) :
+  liste d'initialisation : nom &lt;- nom, note &lt;- note
+  si note &lt; 1   : lancer GradeTooHighException
+  si note &gt; 150 : lancer GradeTooLowException</code></pre></div></details>
+<details class="q"><summary>❓ Question : Pourquoi on lance un objet <code>GradeTooHighException()</code> avec des parenthèses ?</summary><div>On crée l'objet alarme sur place, puis on le lance. On lance <b>par valeur</b>, on attrape <b>par référence</b>.</div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-b2"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="b3" data-ch="ex00 · Bureaucrat.cpp" data-t="Constructeur de copie">
+<span class="eyebrow">Chapitre 2 · ex00 · Bureaucrat.cpp · 10 min</span><h2>Constructeur de copie</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>La photocopieuse : on fabrique un nouveau bureaucrate identique à un autre.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>Bureaucrat(Bureaucrat const &amp; other);</code> → 🗣️ <b>Se lit :</b> « constructeur de copie : il reçoit une référence vers un Bureaucrat constant ».</li></ul></div>
+<div class="b tipb"><b>📏 Convention</b><p>Le paramètre s'appelle <code>other</code>.</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Liste d'initialisation : <code>_name</code> reçoit le nom de <code>other</code>, <code>_grade</code> reçoit sa note.</li><li>Pas besoin de vérifier la note : <code>other</code> est déjà valide.</li></ol></div>
+<pre class="ex"><code>🎒 Bureaucrat a("Ana", 10);
+Bureaucrat b(a);
+-&gt; a: [ Ana | 10 ]   b: [ Ana | 10 ]</code></pre>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>Ici, c'est un <b>constructeur</b> : on peut remplir le nom <code>const</code> dans la liste d'initialisation. Ce ne sera pas le cas dans <code>operator=</code>.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>copie (other) :
+  liste d'initialisation : nom &lt;- nom de other, note &lt;- note de other</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-b3"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="b4" data-ch="ex00 · Bureaucrat.cpp" data-t="operator= : le piège du nom constant">
+<span class="eyebrow">Chapitre 2 · ex00 · Bureaucrat.cpp · 20 min</span><h2>operator= : le piège du nom constant</h2>
+<div class="b story"><b>🎮 L'histoire</b><p><code>a = b;</code> : <code>a</code> existe déjà. Il prend les infos de <code>b</code>.</p><p>Mais le nom de <code>a</code> est gravé dans la pierre. On ne peut copier <b>que la note</b>.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>Bureaucrat &amp; operator=(Bureaucrat const &amp; other);</code> → 🗣️ <b>Se lit :</b> « l'opérateur = reçoit une référence vers un Bureaucrat constant, et renvoie une référence vers moi-même ».</li><li><code>this</code> : l'adresse de l'objet sur lequel on travaille. <code>*this</code> : l'objet lui-même.</li><li><code>&amp;other</code> : l'adresse de other (ici <code>&amp;</code> est dans une expression).</li></ul></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Si <code>this</code> est différent de <code>&amp;other</code> (pas « moi = moi ») : copier la note de <code>other</code>.</li><li>Ne pas toucher au nom.</li><li>Renvoyer <code>*this</code>.</li></ol></div>
+<pre class="ex"><code>🎒 a: [ Ana | 10 ]   b: [ Bob | 3 ]
+a = b;
+a: [ Ana | 3 ]   (le nom reste Ana)</code></pre>
+<div class="b warnb"><b>⚠️ Piège</b><p>Écrire <code>_name = other._name;</code> → erreur de compilation (le nom est <code>const</code>). C'est <b>normal</b>. En soutenance, explique ce choix.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>operator= (other) :
+  si moi n'est pas other :
+    note &lt;- note de other
+    (le nom est constant : on ne le copie pas)
+  renvoyer moi-même</code></pre></div></details>
+<details class="q"><summary>❓ Question : Un évaluateur demande : « pourquoi ton = ne copie pas le nom ? »</summary><div>Parce que <code>_name</code> est <code>const</code> (exigé par le sujet). On ne peut le remplir qu'à la construction.</div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-b4"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="b5" data-ch="ex00 · Bureaucrat.cpp" data-t="Destructeur">
+<span class="eyebrow">Chapitre 2 · ex00 · Bureaucrat.cpp · 5 min</span><h2>Destructeur</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Le bureaucrate quitte le bâtiment. Il n'a rien emprunté : rien à rendre.</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Corps vide (ou un message <code>std::cout</code> si tu veux suivre les appels).</li></ol></div>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>Pas de <code>new</code> dans Bureaucrat, donc pas de <code>delete</code>.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>destructeur :
+  rien à libérer</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-b5"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="b6" data-ch="ex00 · Bureaucrat.cpp" data-t="getName et getGrade">
+<span class="eyebrow">Chapitre 2 · ex00 · Bureaucrat.cpp · 10 min</span><h2>getName et getGrade</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Les guichets d'information : on demande le nom ou la note, sans rien changer.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>std::string const &amp; getName() const;</code> → 🗣️ <b>Se lit :</b> « getName renvoie une référence vers une string constante, et ne modifie pas l'objet ».</li></ul></div>
+<div class="b tipb"><b>📏 Convention</b><p>Getter = <code>get</code> + nom de l'attribut sans <code>_</code>. Toujours <code>const</code> à la fin.</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li><code>getName</code> renvoie <code>_name</code>.</li><li><code>getGrade</code> renvoie <code>_grade</code>.</li></ol></div>
+<div class="b warnb"><b>⚠️ Piège</b><p>Oublier le <code>const</code> de la fin → tu ne pourras pas appeler le getter sur un <code>Bureaucrat const &amp;</code> (ex. dans <code>operator&lt;&lt;</code>).</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>getName  : renvoyer le nom
+getGrade : renvoyer la note</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-b6"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="b7" data-ch="ex00 · Bureaucrat.cpp" data-t="incrementGrade et decrementGrade">
+<span class="eyebrow">Chapitre 2 · ex00 · Bureaucrat.cpp · 20 min</span><h2>incrementGrade et decrementGrade</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Promotion : le bureaucrate monte d'un rang. Sa note <b>baisse</b> de 1.</p><p>Rétrogradation : il descend d'un rang. Sa note <b>monte</b> de 1.</p><p>Le chef (note 1) ne peut pas monter plus haut. Alarme !</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li><code>incrementGrade</code> : si la note est déjà 1 → lancer <code>GradeTooHighException</code>. Sinon, note moins 1.</li><li><code>decrementGrade</code> : si la note est déjà 150 → lancer <code>GradeTooLowException</code>. Sinon, note plus 1.</li><li>Vérifier <b>avant</b> de changer la note.</li></ol></div>
+<pre class="ex"><code>🎒 [ Bob | 3 ]   incrementGrade()  -&gt; [ Bob | 2 ]
+[ Bob | 1 ]   incrementGrade()  -&gt; throw TooHigh, la note reste 1
+[ Bob | 150 ] decrementGrade()  -&gt; throw TooLow</code></pre>
+<div class="b warnb"><b>⚠️ Piège</b><p>Changer la note puis vérifier → la note devient 0 avant l'alarme. Si on attrape l'alarme, l'objet est cassé.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>incrementGrade :
+  si note - 1 &lt; 1 : lancer GradeTooHighException
+  note &lt;- note - 1
+
+decrementGrade :
+  si note + 1 &gt; 150 : lancer GradeTooLowException
+  note &lt;- note + 1</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-b7"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="b8" data-ch="ex00 · Bureaucrat.cpp" data-t="Le texte des alarmes : what()">
+<span class="eyebrow">Chapitre 2 · ex00 · Bureaucrat.cpp · 10 min</span><h2>Le texte des alarmes : what()</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Chaque alarme affiche un petit panneau qui dit ce qui s'est passé.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>const char* Bureaucrat::GradeTooHighException::what() const throw()</code> → 🗣️ <b>Se lit :</b> « la fonction what de l'alarme GradeTooHigh rangée dans Bureaucrat ».</li></ul></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li><code>what</code> de TooHigh renvoie un texte comme <code>"Bureaucrat: grade too high"</code>.</li><li><code>what</code> de TooLow renvoie <code>"Bureaucrat: grade too low"</code>.</li></ol></div>
+<div class="b warnb"><b>⚠️ Piège</b><p>Ne renvoie pas <code>std::string(...).c_str()</code> : la string meurt à la fin de la fonction, le pointeur devient invalide. Un texte entre guillemets direct, c'est sûr.</p></div>
+<div class="b tipb"><b>💬 Message d'erreur</b><pre><code>TooHigh : "Bureaucrat: grade too high"
+TooLow  : "Bureaucrat: grade too low"</code></pre></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>what (TooHigh) : renvoyer le texte "Bureaucrat: grade too high"
+what (TooLow)  : renvoyer le texte "Bureaucrat: grade too low"</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-b8"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="b9" data-ch="ex00 · Bureaucrat.cpp" data-t="operator&lt;&lt; : afficher un bureaucrate">
+<span class="eyebrow">Chapitre 2 · ex00 · Bureaucrat.cpp · 15 min</span><h2>operator&lt;&lt; : afficher un bureaucrate</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>On veut écrire <code>std::cout &lt;&lt; bob;</code> et voir sa carte de visite.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>std::ostream &amp; operator&lt;&lt;(std::ostream &amp; out, Bureaucrat const &amp; b);</code> → 🗣️ <b>Se lit :</b> « operator&lt;&lt; reçoit une référence vers un flux de sortie, et une référence vers un Bureaucrat constant. Il renvoie le flux ».</li><li><b>flux</b> (<code>std::ostream</code>) : un tuyau où on verse du texte. <code>std::cout</code> en est un.</li></ul></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>C'est une fonction <b>libre</b> : pas de <code>Bureaucrat::</code> devant.</li><li>Verser dans <code>out</code> : le nom, <code>", bureaucrat grade "</code>, la note, <code>"."</code>.</li><li>Utiliser les getters (pas <code>friend</code>).</li><li>Renvoyer <code>out</code> (pour pouvoir enchaîner : <code>std::cout &lt;&lt; a &lt;&lt; b</code>).</li></ol></div>
+<pre class="ex"><code>🎒 Bureaucrat bob("Bob", 42);
+std::cout &lt;&lt; bob &lt;&lt; std::endl;
+-&gt; Bob, bureaucrat grade 42.</code></pre>
+<div class="b warnb"><b>⚠️ Piège</b><p>Ne mets pas <code>std::endl</code> dans l'opérateur. C'est à celui qui affiche de choisir.</p></div>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>Tu l'as déjà fait au CPP02 avec <code>Fixed</code>.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>operator&lt;&lt; (out, b) :
+  verser dans out : nom de b, ", bureaucrat grade ", note de b, "."
+  renvoyer out</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-b9"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="t0" data-ch="ex00 · Tests" data-t="Tester ex00 avec try / catch">
+<span class="eyebrow">Chapitre 3 · ex00 · main.cpp · 30 min</span><h2>Tester ex00 avec try / catch</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>On joue au gardien méchant : on essaie toutes les bêtises pour voir si l'alarme sonne.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>try { ... }</code> : « essaie ce code ». Si une alarme sonne dedans, on saute au <code>catch</code>.</li><li><code>catch (std::exception &amp; e)</code> → 🗣️ <b>Se lit :</b> « attrape toute alarme qui est une std::exception, par référence, et appelle-la e ».</li><li><code>e.what()</code> : lire le panneau de l'alarme.</li></ul></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Un bureaucrate normal : affiche-le avec <code>&lt;&lt;</code>.</li><li>Créer avec note 0, puis avec 151 : chacun dans son propre <code>try</code>.</li><li>Note 2 → <code>incrementGrade</code> deux fois : la 2ᵉ doit lancer.</li><li>Note 149 → <code>decrementGrade</code> deux fois : la 2ᵉ doit lancer.</li><li>Une copie et un <code>=</code> : affiche-les.</li></ol></div>
+<pre class="ex"><code>🎒 === Note 0 ===
+Bureaucrat: grade too high
+=== Increment ===
+Bob, bureaucrat grade 1.
+Bureaucrat: grade too high</code></pre>
+<div class="b warnb"><b>⚠️ Piège</b><p>Un seul gros <code>try</code> pour tout → au 1er <code>throw</code>, tous les tests suivants sont sautés. Un <code>try</code> par test.</p></div>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>Pourquoi par référence <code>&amp;</code> ? Pour garder le vrai type de l'alarme (et son vrai <code>what()</code>), et ne pas copier l'objet.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris la liste de tes tests dans ton cahier, avec la sortie attendue. Puis code ton main.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>main :
+  essayer : créer Bob note 42, l'afficher
+  attraper : afficher what
+  essayer : créer note 0          -&gt; doit afficher "too high"
+  essayer : créer note 151        -&gt; doit afficher "too low"
+  essayer : note 2, increment x2  -&gt; afficher après chaque, 2e = alarme
+  essayer : note 149, decrement x2
+  essayer : copie + =, afficher les deux</code></pre></div></details>
+<details class="q"><summary>❓ Question : Après une alarme dans un <code>try</code>, la ligne suivante du <code>try</code> est exécutée ?</summary><div>Non. On saute directement au <code>catch</code>, puis on continue après le <code>catch</code>.</div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-t0"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="f0" data-ch="ex01 · Form" data-t="Form.hpp et la boucle d&#x27;inclusion">
+<span class="eyebrow">Chapitre 4 · ex01 · Form.hpp · 30 min</span><h2>Form.hpp et la boucle d'inclusion</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Le bureaucrate reçoit enfin du travail : des formulaires.</p><p>Le formulaire doit connaître le bureaucrate (pour vérifier sa note). Le bureaucrate doit connaître le formulaire (pour le signer).</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><b>boucle d'inclusion</b> : A inclut B, B inclut A → le compilateur tourne en rond.</li><li><code>class Bureaucrat;</code> : <b>déclaration anticipée</b>. C'est l'étiquette sans la boîte : « une classe Bureaucrat existe, je te la montrerai plus tard ».</li><li>Ça suffit tant qu'on utilise seulement une <b>référence</b> ou un <b>pointeur</b> vers Bureaucrat.</li><li><code>void beSigned(Bureaucrat const &amp; b);</code> → 🗣️ <b>Se lit :</b> « beSigned reçoit une référence vers un Bureaucrat constant, et ne renvoie rien ».</li></ul></div>
+<div class="b tipb"><b>📏 Convention</b><p>Attributs : <code>_name</code>, <code>_signed</code>, <code>_gradeToSign</code>, <code>_gradeToExecute</code>. Garde : <code>FORM_HPP</code>.</p></div>
+<div class="b words"><b>🌍 Traductions (anglais → français)</b><div class="tbl"><table><thead><tr><th>Dans le code</th><th>En français</th></tr></thead><tbody><tr><td><code>Form</code></td><td>le formulaire</td></tr><tr><td><code>signed</code></td><td>signé</td></tr><tr><td><code>gradeToSign</code></td><td>note pour signer</td></tr><tr><td><code>gradeToExecute</code></td><td>note pour exécuter</td></tr><tr><td><code>beSigned</code></td><td>être signé</td></tr><tr><td><code>signForm</code></td><td>signer le formulaire</td></tr></tbody></table></div></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li><code>cp -r ex00 ex01</code>, puis crée <code>Form.hpp</code> et <code>Form.cpp</code>. Ajoute <code>Form.cpp</code> au Makefile.</li><li>Dans <code>Form.hpp</code> : <code>class Bureaucrat;</code> en haut (pas d'include).</li><li>En <code>private</code> : nom constant, booléen signé, deux notes <b>constantes</b> (int).</li><li>En <code>public</code> : forme canonique, constructeur (nom, note signer, note exécuter), 4 getters, <code>beSigned</code>, les 2 exceptions.</li><li>Après la classe : <code>operator&lt;&lt;</code>.</li><li>Dans <code>Bureaucrat.hpp</code> : <code>class Form;</code> et la déclaration de <code>signForm(Form &amp; form)</code>.</li><li>Dans les deux <code>.cpp</code> : inclure <b>les deux</b> <code>.hpp</code>.</li></ol></div>
+<div class="b warnb"><b>⚠️ Piège</b><p>Les attributs doivent être <code>private</code>, pas <code>protected</code>. La grille le vérifie.</p></div>
+<div class="b warnb"><b>⚠️ Piège</b><p><code>signForm(Form &amp; form)</code> : <b>pas</b> <code>const</code>, car signer modifie le formulaire.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>Form.hpp :
+  garde FORM_HPP, include string, iostream, exception
+  déclaration anticipée : classe Bureaucrat
+  classe Form
+    privé : nom const, signé (bool), noteSigner const int, noteExecuter const int
+    public : défaut, (nom, noteSigner, noteExecuter), copie, =, destructeur
+             getName, getSigned (ou isSigned), getGradeToSign, getGradeToExecute (tous const)
+             beSigned(Bureaucrat constant &amp;)
+             GradeTooHighException, GradeTooLowException (comme ex00)
+  operator&lt;&lt; (flux, Form constant)
+
+Bureaucrat.hpp : + déclaration anticipée classe Form
+                 + signForm(Form &amp;)</code></pre></div></details>
+<details class="q"><summary>❓ Question : Pourquoi <code>class Bureaucrat;</code> suffit dans Form.hpp ?</summary><div>Form.hpp ne parle que d'une <b>référence</b> vers Bureaucrat. Le compilateur n'a pas besoin de connaître son contenu pour ça. Le .cpp, lui, inclut le vrai Bureaucrat.hpp.</div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-f0"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="f1" data-ch="ex01 · Form" data-t="Constructeurs de Form">
+<span class="eyebrow">Chapitre 4 · ex01 · Form.cpp · 20 min</span><h2>Constructeurs de Form</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Un formulaire vierge sort de l'imprimante. Il n'est jamais signé au départ. Et ses notes doivent être entre 1 et 150.</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Défaut : nom <code>"Default"</code>, non signé, notes 150 et 150.</li><li>Avec paramètres : tout remplir dans la liste d'initialisation, <code>_signed</code> à <code>false</code>.</li><li>Puis vérifier <b>les deux</b> notes : plus petite que 1 → TooHigh, plus grande que 150 → TooLow.</li></ol></div>
+<pre class="ex"><code>🎒 Form("A38", 50, 25)  -&gt; [ A38 | non signé | 50 | 25 ]
+Form("A38", 0, 25)   -&gt; throw Form::GradeTooHighException
+Form("A38", 50, 151) -&gt; throw Form::GradeTooLowException</code></pre>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>C'est la même vérification que dans le constructeur de Bureaucrat, mais deux fois.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>défaut : nom "Default", signé faux, notes 150 / 150
+
+constructeur (nom, noteS, noteE) :
+  liste d'init : nom, signé &lt;- faux, noteS, noteE
+  si noteS &lt; 1 ou noteE &lt; 1     : lancer GradeTooHighException
+  si noteS &gt; 150 ou noteE &gt; 150 : lancer GradeTooLowException</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-f1"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="f2" data-ch="ex01 · Form" data-t="Copie et operator= de Form">
+<span class="eyebrow">Chapitre 4 · ex01 · Form.cpp · 15 min</span><h2>Copie et operator= de Form</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Trois cases sont gravées (nom, deux notes). Seule la case « signé » peut être recopiée.</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Copie : liste d'initialisation avec les 4 valeurs de <code>other</code>.</li><li><code>operator=</code> : si ce n'est pas moi-même, copier seulement <code>_signed</code>. Renvoyer <code>*this</code>.</li></ol></div>
+<pre class="ex"><code>🎒 a: [ A | non signé | 50 | 25 ]   b: [ B | signé | 10 | 5 ]
+a = b;
+a: [ A | signé | 50 | 25 ]</code></pre>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>Même logique que <code>Bureaucrat::operator=</code> : on ne peut pas copier ce qui est <code>const</code>.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>copie (other) : liste d'init avec nom, signé, noteS, noteE de other
+
+operator= (other) :
+  si moi n'est pas other : signé &lt;- signé de other
+  renvoyer moi-même</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-f2"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="f3" data-ch="ex01 · Form" data-t="Destructeur et getters de Form">
+<span class="eyebrow">Chapitre 4 · ex01 · Form.cpp · 10 min</span><h2>Destructeur et getters de Form</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Les guichets d'information du formulaire.</p></div>
+<div class="b tipb"><b>📏 Convention</b><p>Pour un booléen, on peut écrire <code>getSigned()</code> ou <code>isSigned()</code>. Choisis un nom et garde-le.</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Destructeur vide.</li><li>4 getters <code>const</code> : nom, signé, note pour signer, note pour exécuter.</li></ol></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>destructeur : rien
+getName, getSigned, getGradeToSign, getGradeToExecute : renvoyer l'attribut</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-f3"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="f4" data-ch="ex01 · Form" data-t="beSigned : le formulaire vérifie">
+<span class="eyebrow">Chapitre 4 · ex01 · Form.cpp · 20 min</span><h2>beSigned : le formulaire vérifie</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Le bureaucrate tend son stylo. Le formulaire regarde sa note.</p><p>Note assez haute ? Il devient signé. Sinon : alarme « note trop basse ».</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Lire la note du bureaucrate avec <code>getGrade()</code>.</li><li>Si elle est <b>plus grande</b> que <code>_gradeToSign</code> → lancer <code>GradeTooLowException</code>.</li><li>Sinon : <code>_signed</code> passe à <code>true</code>.</li></ol></div>
+<pre class="ex"><code>🎒 Form A38 demande 50
+Bob (42) -&gt; 42 &lt;= 50 -&gt; signé ✓
+Tim (80) -&gt; 80 &gt; 50  -&gt; throw GradeTooLow</code></pre>
+<div class="b warnb"><b>⚠️ Piège</b><p>« Assez élevé » = nombre <b>plus petit ou égal</b>. Une note égale (50 pour 50) suffit.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>beSigned (b) :
+  si note de b &gt; noteSigner : lancer GradeTooLowException
+  signé &lt;- vrai</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-f4"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="f5" data-ch="ex01 · Form" data-t="what() et operator&lt;&lt; de Form">
+<span class="eyebrow">Chapitre 4 · ex01 · Form.cpp · 15 min</span><h2>what() et operator&lt;&lt; de Form</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Le formulaire a ses propres panneaux d'alarme et sa propre carte de visite.</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Deux <code>what()</code> avec un texte qui commence par <code>Form:</code> (pour savoir qui a sonné).</li><li><code>operator&lt;&lt;</code> affiche tout : nom, signé ou non, note pour signer, note pour exécuter.</li></ol></div>
+<pre class="ex"><code>🎒 Form A38, signed: no, grade to sign: 50, grade to execute: 25</code></pre>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>Pour afficher un booléen en mots : <code>(f.getSigned() ? "yes" : "no")</code>.</p></div>
+<div class="b tipb"><b>💬 Message d'erreur</b><pre><code>TooHigh : "Form: grade too high"
+TooLow  : "Form: grade too low"</code></pre></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>what (TooHigh) : "Form: grade too high"
+what (TooLow)  : "Form: grade too low"
+
+operator&lt;&lt; (out, f) :
+  verser : "Form ", nom, ", signed: ", oui/non, ", grade to sign: ", noteS, ", grade to execute: ", noteE
+  renvoyer out</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-f5"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="f6" data-ch="ex01 · Form" data-t="Bureaucrat::signForm">
+<span class="eyebrow">Chapitre 4 · ex01 · Bureaucrat.cpp · 20 min</span><h2>Bureaucrat::signForm</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Le bureaucrate essaie de signer. S'il réussit, il le dit.</p><p>Si ça rate, il attrape l'alarme lui-même et explique pourquoi. Le programme continue.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li>Ici, <code>try / catch</code> est <b>dans</b> la fonction. L'alarme ne remonte pas jusqu'au main.</li><li><code>*this</code> : moi, le bureaucrate. On le passe à <code>beSigned</code>.</li></ul></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Dans un <code>try</code> : appeler <code>form.beSigned(*this)</code>.</li><li>Juste après (toujours dans le <code>try</code>) : afficher <code>&lt;bureaucrat&gt; signed &lt;form&gt;</code>.</li><li>Dans le <code>catch (std::exception &amp; e)</code> : afficher <code>&lt;bureaucrat&gt; couldn't sign &lt;form&gt; because &lt;e.what()&gt;.</code></li></ol></div>
+<pre class="ex"><code>🎒 Bob signed A38
+Tim couldn't sign A38 because Form: grade too low.</code></pre>
+<div class="b warnb"><b>⚠️ Piège</b><p>Afficher « signed » <b>après</b> l'appel, dans le <code>try</code>. Sinon, on l'affiche même quand ça rate.</p></div>
+<div class="b tipb"><b>💬 Message d'erreur</b><pre><code>std::cerr &lt;&lt; _name &lt;&lt; " couldn't sign " &lt;&lt; form.getName() &lt;&lt; " because " &lt;&lt; e.what() &lt;&lt; "." &lt;&lt; std::endl;</code></pre></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>signForm (form) :
+  essayer :
+    form.beSigned(moi)
+    afficher "&lt;mon nom&gt; signed &lt;nom du form&gt;"
+  attraper (exception e) :
+    afficher "&lt;mon nom&gt; couldn't sign &lt;nom du form&gt; because &lt;e.what&gt;."</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-f6"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="t1" data-ch="ex01 · Tests" data-t="Tester ex01">
+<span class="eyebrow">Chapitre 5 · ex01 · main.cpp · 30 min</span><h2>Tester ex01</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>On imprime des formulaires bizarres et on donne le stylo à des bureaucrates de tous niveaux.</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Form valide : l'afficher avec <code>&lt;&lt;</code>.</li><li>Form avec note 0, puis 151 (chacun dans son <code>try</code>).</li><li>Bureaucrat assez fort → <code>signForm</code> → « signed ».</li><li>Bureaucrat trop faible → <code>signForm</code> → « couldn't sign… because… ».</li><li>Afficher le Form après signature : <code>signed: yes</code>.</li></ol></div>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p><code>signForm</code> attrape déjà l'alarme. Pas besoin de <code>try</code> autour de ces appels-là.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris la liste de tes tests et la sortie attendue.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>main :
+  essayer : Form valide, afficher
+  essayer : Form note 0   -&gt; "Form: grade too high"
+  essayer : Form note 151 -&gt; "Form: grade too low"
+  boss note 1, stagiaire note 150, form demande 50
+  stagiaire.signForm(form)  -&gt; couldn't sign
+  boss.signForm(form)       -&gt; signed
+  afficher form             -&gt; signed: yes</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-t1"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="a0" data-ch="ex02 · AForm" data-t="De Form à AForm : classe abstraite">
+<span class="eyebrow">Chapitre 6 · ex02 · AForm.hpp · 30 min</span><h2>De Form à AForm : classe abstraite</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>« Formulaire » tout court, ça n'existe pas. On remplit toujours <b>un</b> formulaire précis.</p><p>Donc <code>Form</code> devient un <b>modèle</b> : <code>AForm</code>. On ne peut plus créer un AForm tout seul.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><b>fonction virtuelle pure</b> : <code>= 0</code> à la fin. « Chaque enfant DOIT l'écrire. » Une classe qui en a une est abstraite.</li><li><code>virtual void executeAction() const = 0;</code> → 🗣️ <b>Se lit :</b> « executeAction est virtuelle pure, constante, et ne renvoie rien ».</li><li><b>destructeur virtuel</b> : <code>virtual ~AForm();</code>. Indispensable : on fera <code>delete</code> d'un <code>AForm*</code> qui pointe vers un enfant (ex03).</li></ul></div>
+<div class="b tipb"><b>📏 Convention</b><p>Classe abstraite → préfixe <code>A</code> : <code>AForm</code>.</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li><code>cp -r ex01 ex02</code>. Renomme <code>Form.hpp/.cpp</code> en <code>AForm.hpp/.cpp</code>. Remplace <code>Form</code> par <code>AForm</code> partout (garde : <code>AFORM_HPP</code>).</li><li>Les 4 attributs restent <code>private</code> dans AForm.</li><li>Rends le destructeur <code>virtual</code>.</li><li>Ajoute en <code>public</code> : <code>void execute(Bureaucrat const &amp; executor) const;</code>.</li><li>Ajoute une fonction virtuelle pure pour l'action (ex. <code>executeAction() const = 0</code>). En <code>protected</code> ou <code>private</code>.</li><li>Dans Bureaucrat : <code>signForm(AForm &amp; form)</code>.</li></ol></div>
+<div class="b warnb"><b>⚠️ Piège</b><p>La grille écrit <code>Form::execute</code>. En ex02 c'est bien <code>AForm::execute</code> : le sujet demande de renommer.</p></div>
+<div class="b warnb"><b>⚠️ Piège</b><p>Pas de corps pour une fonction <code>= 0</code> dans le squelette.</p></div>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>Comme <code>AMateria</code> au CPP04 : une classe de base abstraite, des enfants concrets.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>AForm.hpp :
+  tout Form, renommé AForm
+  destructeur virtuel
+  public : execute(Bureaucrat constant &amp; executor) const
+  protégé : executeAction() const = 0   (virtuelle pure)
+  + exception FormNotSignedException (page suivante)</code></pre></div></details>
+<details class="q"><summary>❓ Question : Pourquoi <code>AForm f;</code> ne compile plus ?</summary><div>AForm a une fonction virtuelle pure. On ne peut pas créer d'objet d'une classe abstraite.</div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-a0"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="a1" data-ch="ex02 · AForm" data-t="execute : vérifier, puis déléguer">
+<span class="eyebrow">Chapitre 6 · ex02 · AForm.cpp · 30 min</span><h2>execute : vérifier, puis déléguer</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Le guichet vérifie deux choses : le formulaire est signé ? La personne a la note pour exécuter ?</p><p>Si tout est bon, il passe le dossier au bon service (l'enfant).</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>FormNotSignedException</code> : une 3ᵉ alarme, « le formulaire n'est pas signé ». Même forme que les autres.</li><li><b>déléguer</b> : confier le vrai travail à quelqu'un d'autre.</li></ul></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Ajoute la classe <code>FormNotSignedException</code> dans AForm (hpp) et son <code>what()</code> (cpp).</li><li>Dans <code>execute</code> : si pas signé → lancer <code>FormNotSignedException</code>.</li><li>Si la note de <code>executor</code> est plus grande que <code>_gradeToExecute</code> → lancer <code>GradeTooLowException</code>.</li><li>Sinon : appeler <code>executeAction()</code>.</li></ol></div>
+<div class="diagram"><svg viewBox="0 0 680 220" role="img" aria-label="execute vérifie puis appelle l'action de l'enfant">
+<defs><marker id="ah5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="d-head2"/></marker></defs>
+<rect x="20" y="20" width="300" height="180" rx="8" class="d-abs"/><text x="36" y="46" class="d-t">AForm::execute(executor)</text>
+<text x="36" y="80" class="d-m">1. signé ?        sinon throw</text><text x="36" y="108" class="d-m">2. note assez ?   sinon throw</text>
+<text x="36" y="136" class="d-m">3. executeAction()</text><text x="36" y="176" class="d-s">écrit UNE fois, dans le parent</text>
+<rect x="400" y="20" width="260" height="50" rx="8" class="d-con"/><text x="414" y="50" class="d-m">Shrubbery: écrire le fichier</text>
+<rect x="400" y="85" width="260" height="50" rx="8" class="d-con"/><text x="414" y="115" class="d-m">Robotomy: bzzz… 50 %</text>
+<rect x="400" y="150" width="260" height="50" rx="8" class="d-con"/><text x="414" y="180" class="d-m">Pardon: Zaphod gracie</text>
+<path d="M240 132 L398 46" class="d-ptr" marker-end="url(#ah5)"/><path d="M240 132 L398 110" class="d-ptr" marker-end="url(#ah5)"/><path d="M240 132 L398 174" class="d-ptr" marker-end="url(#ah5)"/>
+</svg></div>
+<p class="caption">Le parent vérifie. La fonction virtuelle choisit le bon enfant au moment de l'exécution.</p>
+<div class="b warnb"><b>⚠️ Piège</b><p>Le sujet dit : une des deux méthodes est « plus élégante ». C'est celle-ci : les vérifications sont écrites <b>une seule fois</b> dans le parent.</p></div>
+<div class="b tipb"><b>💬 Message d'erreur</b><pre><code>FormNotSigned : "AForm: form is not signed"
+TooLow        : "AForm: grade too low"</code></pre></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>execute (executor) :
+  si pas signé : lancer FormNotSignedException
+  si note de executor &gt; noteExecuter : lancer GradeTooLowException
+  executeAction()   -&gt; la version de l'enfant est appelée</code></pre></div></details>
+<details class="q"><summary>❓ Question : Pourquoi <code>execute</code> peut être <code>const</code> ?</summary><div>Exécuter ne change pas le formulaire (ni nom, ni signé, ni notes).</div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-a1"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="g0" data-ch="ex02 · Les 3 formulaires" data-t="Le squelette des 3 formulaires">
+<span class="eyebrow">Chapitre 7 · ex02 · 3 × .hpp · 30 min</span><h2>Le squelette des 3 formulaires</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Trois vrais formulaires. Chacun a une <b>cible</b> (target) : la personne ou le lieu concerné.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>ShrubberyCreationForm(std::string const &amp; target);</code> → 🗣️ <b>Se lit :</b> « constructeur qui reçoit une référence vers une string constante : la cible ».</li></ul></div>
+<div class="b words"><b>🌍 Traductions (anglais → français)</b><div class="tbl"><table><thead><tr><th>Dans le code</th><th>En français</th></tr></thead><tbody><tr><td><code>Shrubbery</code></td><td>arbustes, buissons</td></tr><tr><td><code>Creation</code></td><td>création</td></tr><tr><td><code>Robotomy</code></td><td>robotomie</td></tr><tr><td><code>Request</code></td><td>demande</td></tr><tr><td><code>Presidential Pardon</code></td><td>grâce présidentielle</td></tr><tr><td><code>target</code></td><td>la cible</td></tr></tbody></table></div></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Pour chaque classe : <code>X.hpp</code> + <code>X.cpp</code>, hérite publiquement de <code>AForm</code>.</li><li>Attribut <code>private</code> : <code>_target</code> (string).</li><li>Forme canonique + constructeur (target) : <b>un seul</b> paramètre.</li><li>Redéclarer <code>executeAction() const</code> (sans <code>= 0</code>).</li><li>Ajouter les 3 <code>.cpp</code> au Makefile.</li></ol></div>
+<div class="tbl"><table><thead><tr><th>Classe</th><th>Nom passé à AForm</th><th>Signer</th><th>Exécuter</th></tr></thead><tbody><tr><td><code>ShrubberyCreationForm</code></td><td><code>ShrubberyCreationForm</code></td><td>145</td><td>137</td></tr><tr><td><code>RobotomyRequestForm</code></td><td><code>RobotomyRequestForm</code></td><td>72</td><td>45</td></tr><tr><td><code>PresidentialPardonForm</code></td><td><code>PresidentialPardonForm</code></td><td>25</td><td>5</td></tr></tbody></table></div>
+<div class="b warnb"><b>⚠️ Piège</b><p>Le constructeur prend <b>seulement</b> la cible. Les notes sont fixées dans la classe, pas passées par le main.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>pour chaque formulaire X :
+  classe X, enfant public de AForm
+    privé : cible (string)
+    public : défaut, (cible), copie, =, destructeur
+  protégé : executeAction() const</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-g0"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="g1" data-ch="ex02 · Les 3 formulaires" data-t="ShrubberyCreationForm : constructeurs">
+<span class="eyebrow">Chapitre 7 · ex02 · ShrubberyCreationForm.cpp · 20 min</span><h2>ShrubberyCreationForm : constructeurs</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Le formulaire naît avec ses notes déjà imprimées dessus.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><b>appeler le constructeur du parent</b> : dans la liste d'initialisation, <code>AForm("Nom", 145, 137)</code>. C'est le parent qui remplit ses attributs <code>private</code>.</li></ul></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Défaut : appeler <code>AForm</code> avec nom et notes, <code>_target</code> = <code>"default"</code>.</li><li>(target) : pareil, <code>_target</code> = target.</li><li>Copie : appeler la copie du parent <code>AForm(other)</code>, puis copier <code>_target</code>.</li><li><code>operator=</code> : appeler <code>AForm::operator=(other)</code>, copier <code>_target</code>, renvoyer <code>*this</code>.</li></ol></div>
+<pre class="ex"><code>🎒 ShrubberyCreationForm s("home");
+-&gt; [ ShrubberyCreationForm | non signé | 145 | 137 ] cible: home</code></pre>
+<div class="b warnb"><b>⚠️ Piège</b><p>Un enfant ne peut pas toucher aux attributs <code>private</code> du parent. Passe toujours par le constructeur ou l'<code>operator=</code> du parent.</p></div>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>Les 2 autres formulaires se font <b>exactement</b> pareil. Seuls le nom et les notes changent.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>défaut  : parent("ShrubberyCreationForm", 145, 137), cible &lt;- "default"
+(cible) : parent(pareil), cible &lt;- cible
+copie   : parent(other), cible &lt;- cible de other
+=       : si pas moi : parent = other, cible &lt;- cible de other ; renvoyer moi</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-g1"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="g2" data-ch="ex02 · Les 3 formulaires" data-t="Shrubbery : planter des arbres dans un fichier">
+<span class="eyebrow">Chapitre 7 · ex02 · ShrubberyCreationForm.cpp · 30 min</span><h2>Shrubbery : planter des arbres dans un fichier</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Le jardinier crée un fichier <code>&lt;target&gt;_shrubbery</code> et y dessine des arbres en ASCII.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>std::ofstream</code> (dans <code>&lt;fstream&gt;</code>) : un tuyau vers un fichier. On y verse du texte comme dans <code>std::cout</code>.</li><li><code>.c_str()</code> : transforme une <code>std::string</code> en texte C. En C++98, <code>ofstream</code> veut ce format.</li><li><code>is_open()</code> : le fichier a bien été ouvert ?</li></ul></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Construire le nom : cible + <code>"_shrubbery"</code>.</li><li>Ouvrir un <code>std::ofstream</code> avec ce nom (<code>.c_str()</code>).</li><li>Pas ouvert → lancer une exception (ou un message d'erreur).</li><li>Verser quelques arbres ASCII dedans.</li><li>Le fichier se ferme seul à la fin de la fonction (ou <code>.close()</code>).</li></ol></div>
+<pre class="ex"><code>🎒 target "home" -&gt; fichier ./home_shrubbery
+       /\
+      /**\
+     /****\
+       ||</code></pre>
+<div class="b warnb"><b>⚠️ Piège</b><p><code>std::ofstream f(nom);</code> avec une <code>std::string</code> → erreur en C++98. Il faut <code>nom.c_str()</code>.</p></div>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>Au CPP01 (ex04, « sed is for losers »), tu as déjà écrit dans un fichier.</p></div>
+<div class="b tipb"><b>💬 Message d'erreur</b><pre><code>std::cerr &lt;&lt; "Shrubbery: cannot open " &lt;&lt; fileName &lt;&lt; std::endl;</code></pre></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>executeAction :
+  nomFichier &lt;- cible + "_shrubbery"
+  ouvrir le fichier nomFichier en écriture
+  si pas ouvert : lancer une exception (ou afficher une erreur)
+  écrire des arbres ASCII dans le fichier</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-g2"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="g3" data-ch="ex02 · Les 3 formulaires" data-t="RobotomyRequestForm">
+<span class="eyebrow">Chapitre 7 · ex02 · RobotomyRequestForm.cpp · 30 min</span><h2>RobotomyRequestForm</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Un docteur fou. « Bzzzz… vrrrr… » Puis : réussi, ou raté.</p><p>Une chance sur deux, comme pile ou face.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>std::rand()</code> (dans <code>&lt;cstdlib&gt;</code>) : un nombre au hasard.</li><li><code>std::rand() % 2</code> : le reste de la division par 2 → 0 ou 1. Pile ou face.</li><li><code>std::srand(std::time(NULL))</code> (<code>&lt;ctime&gt;</code>) : mélange le paquet de cartes. À faire <b>une seule fois</b>, au début du <code>main</code>.</li></ul></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Constructeurs : comme Shrubbery, avec <code>"RobotomyRequestForm"</code>, 72, 45.</li><li>Action : afficher des bruits de perceuse.</li><li>Tirer 0 ou 1 : si 0 → <code>&lt;target&gt; has been robotomized successfully</code>, sinon → <code>the robotomy failed</code>.</li></ol></div>
+<pre class="ex"><code>🎒 Bzzzzz... VRRRRR... bzzz...
+Bender has been robotomized successfully</code></pre>
+<div class="b warnb"><b>⚠️ Piège</b><p>Appeler <code>srand</code> dans <code>executeAction</code> → si on exécute 2 fois dans la même seconde, on a le même résultat. Une fois dans le main, c'est tout.</p></div>
+<div class="b tipb"><b>💬 Message d'erreur</b><pre><code>std::cout &lt;&lt; "Robotomy on " &lt;&lt; _target &lt;&lt; " failed" &lt;&lt; std::endl;</code></pre></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>executeAction :
+  afficher "* drilling noises *"
+  si rand % 2 vaut 0 : afficher "&lt;cible&gt; has been robotomized successfully"
+  sinon              : afficher "Robotomy on &lt;cible&gt; failed"</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-g3"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="g4" data-ch="ex02 · Les 3 formulaires" data-t="PresidentialPardonForm">
+<span class="eyebrow">Chapitre 7 · ex02 · PresidentialPardonForm.cpp · 15 min</span><h2>PresidentialPardonForm</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Le président de la galaxie, Zaphod Beeblebrox, pardonne quelqu'un. Il faut une note de 5 pour exécuter !</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Constructeurs : <code>"PresidentialPardonForm"</code>, 25, 5.</li><li>Action : afficher <code>&lt;target&gt; has been pardoned by Zaphod Beeblebrox.</code></li></ol></div>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>C'est le plus simple des trois. Bonne nouvelle.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>executeAction :
+  afficher "&lt;cible&gt; has been pardoned by Zaphod Beeblebrox."</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-g4"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="g5" data-ch="ex02 · Les 3 formulaires" data-t="Bureaucrat::executeForm">
+<span class="eyebrow">Chapitre 7 · ex02 · Bureaucrat.cpp · 20 min</span><h2>Bureaucrat::executeForm</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Le bureaucrate essaie d'exécuter. Comme pour signer : il annonce le succès, ou il explique l'échec.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>void executeForm(AForm const &amp; form) const;</code> → 🗣️ <b>Se lit :</b> « executeForm reçoit une référence vers un AForm constant, ne renvoie rien, et ne modifie pas le bureaucrate ».</li></ul></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Dans <code>Bureaucrat.hpp</code> : <code>class AForm;</code> et la déclaration.</li><li>Dans un <code>try</code> : <code>form.execute(*this)</code>, puis afficher <code>&lt;bureaucrat&gt; executed &lt;form&gt;</code>.</li><li>Dans le <code>catch</code> : un message d'erreur clair avec <code>e.what()</code>.</li></ol></div>
+<pre class="ex"><code>🎒 Boss executed PresidentialPardonForm
+Tim couldn't execute RobotomyRequestForm because AForm: form is not signed</code></pre>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>C'est le jumeau de <code>signForm</code>.</p></div>
+<div class="b tipb"><b>💬 Message d'erreur</b><pre><code>std::cerr &lt;&lt; _name &lt;&lt; " couldn't execute " &lt;&lt; form.getName() &lt;&lt; " because " &lt;&lt; e.what() &lt;&lt; std::endl;</code></pre></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>executeForm (form) :
+  essayer :
+    form.execute(moi)
+    afficher "&lt;mon nom&gt; executed &lt;nom du form&gt;"
+  attraper (exception e) :
+    afficher "&lt;mon nom&gt; couldn't execute &lt;nom du form&gt; because &lt;e.what&gt;"</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-g5"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="t2" data-ch="ex02 · Tests" data-t="Tester ex02">
+<span class="eyebrow">Chapitre 8 · ex02 · main.cpp · 40 min</span><h2>Tester ex02</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>On fait passer chaque formulaire par toutes les étapes, avec un chef et un débutant.</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li><code>std::srand(std::time(NULL));</code> en première ligne.</li><li>Pour chaque formulaire : exécuter <b>sans</b> signer → « not signed ».</li><li>Signer avec un débutant → refus. Signer avec le chef → OK.</li><li>Exécuter avec le débutant → « grade too low ». Avec le chef → l'action.</li><li>Vérifier que le fichier <code>home_shrubbery</code> existe (<code>cat home_shrubbery</code>). Robotomy plusieurs fois : on doit voir les deux résultats.</li></ol></div>
+<div class="b warnb"><b>⚠️ Piège</b><p>Note 137 pour exécuter Shrubbery : un bureaucrate de note 140 peut signer (145) mais <b>pas</b> exécuter. Bon test !</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ta liste de tests et la sortie attendue.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>main :
+  srand(time)
+  boss note 1, moyen note 140
+  pour Shrubbery("home"), Robotomy("Bender"), Pardon("Arthur") :
+    boss.executeForm(f)     -&gt; not signed
+    moyen.signForm(f)       -&gt; OK pour Shrubbery, refus pour les autres
+    boss.signForm(f)
+    moyen.executeForm(f)    -&gt; grade too low
+    boss.executeForm(f)     -&gt; action + executed</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-t2"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="n0" data-ch="ex03 · Intern" data-t="Intern.hpp : le stagiaire">
+<span class="eyebrow">Chapitre 9 · ex03 · Intern.hpp · 20 min</span><h2>Intern.hpp : le stagiaire</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Le stagiaire n'a ni nom, ni note. Il sait faire une seule chose : remplir le bon formulaire quand on lui donne son nom.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>AForm* makeForm(std::string const &amp; formName, std::string const &amp; target);</code> → 🗣️ <b>Se lit :</b> « makeForm reçoit deux références vers des strings constantes, et renvoie un pointeur vers AForm ».</li></ul></div>
+<div class="b tipb"><b>📏 Convention</b><p>Classe sans attribut : rien à copier dans la copie et <code>operator=</code>. Ils existent quand même.</p></div>
+<div class="b words"><b>🌍 Traductions (anglais → français)</b><div class="tbl"><table><thead><tr><th>Dans le code</th><th>En français</th></tr></thead><tbody><tr><td><code>Intern</code></td><td>le stagiaire</td></tr><tr><td><code>makeForm</code></td><td>fabriquer un formulaire</td></tr><tr><td><code>formName</code></td><td>nom du formulaire</td></tr></tbody></table></div></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li><code>cp -r ex02 ex03</code>, crée <code>Intern.hpp</code> / <code>Intern.cpp</code>, ajoute au Makefile.</li><li>Forme canonique complète (même vide : la grille la demande).</li><li>En <code>public</code> : <code>makeForm</code>.</li><li>En <code>private</code> : 3 petites fonctions de création (page 3 du chapitre).</li></ol></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>Intern.hpp :
+  garde INTERN_HPP, include string, AForm.hpp
+  classe Intern
+    public : défaut, copie, =, destructeur
+             makeForm(nom, cible) -&gt; pointeur vers AForm
+    privé : createShrubbery(cible), createRobotomy(cible), createPardon(cible)
+            -&gt; chacune renvoie un pointeur vers AForm</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-n0"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="n1" data-ch="ex03 · Intern" data-t="Notion : le pointeur sur fonction membre">
+<span class="eyebrow">Chapitre 9 · ex03 · notion · 30 min</span><h2>Notion : le pointeur sur fonction membre</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Imagine un tableau de boutons d'ascenseur. Chaque bouton mène à un étage.</p><p>Au lieu d'écrire « si étage 1 alors…, sinon si étage 2 alors… », on appuie sur le bouton numéro i.</p><p>Un <b>pointeur sur fonction membre</b>, c'est un bouton qui mène à une fonction de la classe.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li>La grille l'exige : « un tableau de pointeurs sur fonctions membres ». Un if/else if = faux.</li><li>Exemple avec une autre classe, <code>Chef</code>, qui a <code>void cuire();</code> et <code>void couper();</code> :</li><li><code>void (Chef::*action)();</code> → 🗣️ <b>Se lit :</b> « action est un pointeur vers une fonction membre de Chef, sans paramètre, qui ne renvoie rien ».</li><li><code>action = &amp;Chef::cuire;</code> → on range l'adresse de la fonction (le <code>&amp;</code> est obligatoire).</li><li><code>(this-&gt;*action)();</code> → on appuie sur le bouton : on appelle la fonction sur moi-même. Les parenthèses autour de <code>this-&gt;*action</code> sont obligatoires.</li><li>Tableau de 2 boutons : <code>void (Chef::*actions[2])() = { &amp;Chef::cuire, &amp;Chef::couper };</code></li></ul></div>
+<pre class="ex"><code>🎒 actions :  [ 0 ] -&gt; Chef::cuire
+           [ 1 ] -&gt; Chef::couper
+(this-&gt;*actions[1])();   -&gt; appelle couper()</code></pre>
+<div class="b warnb"><b>⚠️ Piège</b><p>Lire la déclaration de <b>l'intérieur vers l'extérieur</b> : d'abord le nom (<code>actions</code>), puis <code>[2]</code> (tableau de 2), puis <code>Chef::*</code> (pointeurs sur membre de Chef), puis <code>()</code> (fonction sans paramètre), puis <code>void</code> (renvoie rien).</p></div>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>Si la syntaxe fait peur : un <code>typedef</code> aide. <code>typedef void (Chef::*Action)();</code> → ensuite <code>Action actions[2];</code>.</p></div>
+<details class="q"><summary>❓ Question : Comment se lit <code>AForm* (Intern::*f)(std::string const &amp;) const</code> ?</summary><div>f est un pointeur vers une fonction membre constante de Intern, qui reçoit une référence vers une string constante et renvoie un pointeur vers AForm.</div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-n1"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="n2" data-ch="ex03 · Intern" data-t="Les 3 fonctions de création">
+<span class="eyebrow">Chapitre 9 · ex03 · Intern.cpp · 15 min</span><h2>Les 3 fonctions de création</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Trois petits tampons. Chacun fabrique un seul type de formulaire.</p></div>
+<div class="b words"><b>📖 Mots nouveaux</b><ul><li><code>new</code> : créer un objet sur le <b>tas</b>. Il survit après la fonction. Quelqu'un devra faire <code>delete</code>.</li></ul></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Forme canonique : corps vides, <code>operator=</code> renvoie <code>*this</code>.</li><li><code>createShrubbery(target)</code> : renvoie un <code>new ShrubberyCreationForm(target)</code>.</li><li>Pareil pour Robotomy et Pardon.</li><li>Inclure les 3 <code>.hpp</code> des formulaires dans <code>Intern.cpp</code>.</li></ol></div>
+<div class="b warnb"><b>⚠️ Piège</b><p>Les 3 fonctions doivent avoir <b>exactement</b> la même signature (même paramètre, même retour, même <code>const</code>). Sinon, elles ne rentrent pas dans le même tableau.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>createShrubbery (cible) : renvoyer new ShrubberyCreationForm(cible)
+createRobotomy  (cible) : renvoyer new RobotomyRequestForm(cible)
+createPardon    (cible) : renvoyer new PresidentialPardonForm(cible)</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-n2"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="n3" data-ch="ex03 · Intern" data-t="makeForm : le tableau de boutons">
+<span class="eyebrow">Chapitre 9 · ex03 · Intern.cpp · 40 min</span><h2>makeForm : le tableau de boutons</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>On donne au stagiaire « robotomy request ». Il cherche ce nom dans sa liste.</p><p>Il trouve la case 1 ? Il appuie sur le bouton 1 : un RobotomyRequestForm sort.</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>Un tableau de 3 strings : les noms acceptés.</li><li>Un tableau de 3 pointeurs sur fonctions membres, <b>dans le même ordre</b>.</li><li>Une boucle de 0 à 2 : si le nom donné est égal à <code>noms[i]</code> → afficher <code>Intern creates &lt;form&gt;</code> et renvoyer le résultat du bouton i.</li><li>Après la boucle (rien trouvé) : message d'erreur, renvoyer <code>NULL</code>.</li></ol></div>
+<pre class="ex"><code>🎒 noms :    [ "shrubbery creation" | "robotomy request" | "presidential pardon" ]
+boutons : [ createShrubbery     | createRobotomy     | createPardon          ]
+makeForm("robotomy request", "Bender") -&gt; i = 1 -&gt; new RobotomyRequestForm("Bender")</code></pre>
+<div class="b warnb"><b>⚠️ Piège</b><p>Pas de <code>if / else if / else if</code> sur les noms : la grille compte faux.</p></div>
+<div class="b warnb"><b>⚠️ Piège</b><p><code>NULL</code>, pas <code>nullptr</code> (C++11).</p></div>
+<div class="b tipb"><b>💬 Message d'erreur</b><pre><code>std::cerr &lt;&lt; "Intern: form \"" &lt;&lt; formName &lt;&lt; "\" does not exist" &lt;&lt; std::endl;</code></pre></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ton pseudo-code dans ton cahier. Ensuite seulement, ouvre le bloc en dessous.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>makeForm (nom, cible) :
+  noms    &lt;- { "shrubbery creation", "robotomy request", "presidential pardon" }
+  boutons &lt;- { createShrubbery, createRobotomy, createPardon }
+  pour i de 0 à 2 :
+    si nom == noms[i] :
+      afficher "Intern creates &lt;nom&gt;"
+      renvoyer (moi -&gt;* boutons[i])(cible)
+  afficher l'erreur "form does not exist"
+  renvoyer NULL</code></pre></div></details>
+<details class="q"><summary>❓ Question : Qui doit faire le <code>delete</code> du formulaire ?</summary><div>Celui qui reçoit le pointeur : le <code>main</code>. Le stagiaire fabrique, le main jette.</div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-n3"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="t3" data-ch="ex03 · Tests" data-t="Tester ex03 et valgrind">
+<span class="eyebrow">Chapitre 10 · ex03 · main.cpp · 30 min</span><h2>Tester ex03 et valgrind</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>On demande au stagiaire les 3 formulaires, plus un qui n'existe pas. Puis on vérifie que rien ne traîne en mémoire.</p></div>
+<div class="b steps"><b>✅ Étapes</b><ol><li>L'exemple du sujet : <code>makeForm("robotomy request", "Bender")</code>.</li><li>Les 2 autres noms.</li><li>Un nom faux (ex. <code>"coffee"</code>) → message d'erreur, pointeur <code>NULL</code>.</li><li>Signer et exécuter un formulaire créé par le stagiaire.</li><li><code>delete</code> chaque pointeur. <code>delete NULL</code> ne fait rien : c'est sans danger.</li><li><code>valgrind --leak-check=full ./intern</code> → « All heap blocks were freed ».</li></ol></div>
+<div class="b warnb"><b>⚠️ Piège</b><p>Avant d'utiliser le pointeur : vérifier qu'il n'est pas <code>NULL</code>. Sinon, crash.</p></div>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>Grâce au destructeur <b>virtuel</b> d'AForm, <code>delete</code> sur un <code>AForm*</code> appelle bien le destructeur de l'enfant.</p></div>
+<div class="b you"><b>✍️ À toi</b><p>Écris ta liste de tests et la sortie attendue.</p></div>
+<details class="lock"><summary>🔒 Déverrouiller mon pseudo-code</summary><div><pre><code>main :
+  srand(time)
+  stagiaire, boss note 1
+  f &lt;- stagiaire.makeForm("robotomy request", "Bender")
+  si f pas NULL : boss.signForm(*f), boss.executeForm(*f)
+  g &lt;- makeForm("shrubbery creation", "home")
+  h &lt;- makeForm("presidential pardon", "Arthur")
+  x &lt;- makeForm("coffee", "x")   -&gt; erreur, NULL
+  delete f, g, h, x</code></pre></div></details>
+<ul class="checks"><li><label><input type="checkbox" id="c-t3"><span>Page faite et comprise</span></label></li></ul>
+</article>
+
+<article class="pg" id="r1" data-ch="Récap" data-t="Tous les messages d&#x27;erreur">
+<span class="eyebrow">Récap · à copier</span><h2>Tous les messages d'erreur</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Toutes les alarmes et tous les messages d'échec, au même endroit.</p></div>
+<div class="tbl"><table><thead><tr><th>Fichier</th><th>Fonction</th><th>Quand</th><th>Ligne</th></tr></thead><tbody><tr><td>Bureaucrat.cpp</td><td>GradeTooHighException::what</td><td>note &lt; 1</td><td><code>return "Bureaucrat: grade too high";</code></td></tr><tr><td>Bureaucrat.cpp</td><td>GradeTooLowException::what</td><td>note &gt; 150</td><td><code>return "Bureaucrat: grade too low";</code></td></tr><tr><td>Form.cpp / AForm.cpp</td><td>GradeTooHighException::what</td><td>note du form &lt; 1</td><td><code>return "Form: grade too high";</code></td></tr><tr><td>Form.cpp / AForm.cpp</td><td>GradeTooLowException::what</td><td>note hors limites, ou bureaucrate trop faible</td><td><code>return "Form: grade too low";</code></td></tr><tr><td>AForm.cpp</td><td>FormNotSignedException::what</td><td>execute sans signature</td><td><code>return "AForm: form is not signed";</code></td></tr><tr><td>Bureaucrat.cpp</td><td>signForm</td><td>beSigned a lancé</td><td><code>std::cerr &lt;&lt; _name &lt;&lt; " couldn't sign " &lt;&lt; form.getName() &lt;&lt; " because " &lt;&lt; e.what() &lt;&lt; "." &lt;&lt; std::endl;</code></td></tr><tr><td>Bureaucrat.cpp</td><td>executeForm</td><td>execute a lancé</td><td><code>std::cerr &lt;&lt; _name &lt;&lt; " couldn't execute " &lt;&lt; form.getName() &lt;&lt; " because " &lt;&lt; e.what() &lt;&lt; std::endl;</code></td></tr><tr><td>ShrubberyCreationForm.cpp</td><td>executeAction</td><td>fichier pas ouvert</td><td><code>std::cerr &lt;&lt; "Shrubbery: cannot open " &lt;&lt; fileName &lt;&lt; std::endl;</code></td></tr><tr><td>RobotomyRequestForm.cpp</td><td>executeAction</td><td>1 fois sur 2</td><td><code>std::cout &lt;&lt; "Robotomy on " &lt;&lt; _target &lt;&lt; " failed" &lt;&lt; std::endl;</code></td></tr><tr><td>Intern.cpp</td><td>makeForm</td><td>nom inconnu</td><td><code>std::cerr &lt;&lt; "Intern: form \"" &lt;&lt; formName &lt;&lt; "\" does not exist" &lt;&lt; std::endl;</code></td></tr></tbody></table></div>
+<div class="b tipb"><b>💡 Astuce / tu connais déjà</b><p>En ex02, tu peux renommer les textes « Form: » en « AForm: ». Garde le même style partout.</p></div>
+</article>
+
+<article class="pg" id="x1" data-ch="Annexe" data-t="Règles et grille">
+<span class="eyebrow">Annexe</span><h2>Règles du jeu et grille de correction</h2>
+<div class="contra"><b>Contradictions sujet / grille</b>
+<p>1. ex03 : le sujet dit « pas de gros if/else ». La grille exige précisément <b>un tableau de pointeurs sur fonctions membres</b>. On suit la grille.</p>
+<p>2. ex02 : la grille écrit <code>Form::execute</code> et <code>executeForm(Form const &amp;)</code>. Le sujet fait renommer en <code>AForm</code>. C'est bien AForm.</p>
+<p>3. ex02 : les deux méthodes sont valides pour la grille. Le sujet préfère la plus « élégante » : vérifier dans le parent.</p></div>
+<div class="tbl"><table><thead><tr><th>Point de la grille</th><th>Où dans le code</th><th>Comment le montrer en 30 s</th></tr></thead><tbody><tr><td>Compile avec c++ -Wall -Wextra -Werror (C++98)</td><td>Makefile de chaque exo</td><td><code>make re</code> devant l'évaluateur</td></tr><tr><td>Forme canonique (sauf exceptions)</td><td>chaque <code>.hpp</code></td><td>montrer les 4 fonctions</td></tr><tr><td>Nom constant, note 1 à 150</td><td>Bureaucrat.hpp</td><td><code>std::string const _name;</code></td></tr><tr><td>Exceptions à la création</td><td>constructeur Bureaucrat</td><td>test note 0 et 151</td></tr><tr><td>increment / decrement + exceptions</td><td>Bureaucrat.cpp</td><td>test note 1 → increment</td></tr><tr><td>Exceptions héritent de std::exception</td><td>Bureaucrat.hpp</td><td><code>catch (std::exception &amp; e)</code> dans le main</td></tr><tr><td>operator&lt;&lt;</td><td>fin de Bureaucrat.cpp</td><td><code>std::cout &lt;&lt; bob</code></td></tr><tr><td>Form : attributs private, nom et notes const</td><td>Form.hpp</td><td>montrer <code>private:</code></td></tr><tr><td>beSigned / signForm</td><td>Form.cpp, Bureaucrat.cpp</td><td>test bureaucrate faible et fort</td></tr><tr><td>3 formulaires : notes, noms, actions</td><td>3 × .cpp</td><td>tableau 145/137, 72/45, 25/5</td></tr><tr><td>Constructeur avec target seulement</td><td>3 × .hpp</td><td>un seul paramètre</td></tr><tr><td>execute : vérifs puis action de l'enfant</td><td>AForm.cpp</td><td>expliquer le schéma du chapitre 6</td></tr><tr><td>executeForm</td><td>Bureaucrat.cpp</td><td>test non signé + note trop basse</td></tr><tr><td>makeForm</td><td>Intern.cpp</td><td>exemple « robotomy request » + nom faux</td></tr><tr><td>Tableau de pointeurs sur fonctions membres</td><td>Intern.cpp</td><td>montrer les 2 tableaux et la boucle</td></tr><tr><td>Pas de fuite</td><td>main ex03</td><td><code>valgrind --leak-check=full</code></td></tr></tbody></table></div>
+<div class="b warnb"><b>⚠️ Piège</b><p>Une petite modification peut t'être demandée en soutenance (ex. ajouter un 4ᵉ formulaire au stagiaire, changer un message). Avec le tableau, c'est 2 lignes à ajouter.</p></div>
+</article>
+
+<article class="pg" id="x2" data-ch="Annexe" data-t="Fiche de soutenance">
+<span class="eyebrow">Annexe</span><h2>Fiche de soutenance</h2>
+<div class="b story"><b>🎮 L'histoire</b><p>Les questions qu'un évaluateur pose souvent. Essaie de répondre avant d'ouvrir.</p></div>
+<details class="q"><summary>❓ Question : Qu'est-ce qu'une exception ?</summary><div>Une alarme. On la lance avec <code>throw</code> quand une règle est cassée. Elle remonte les fonctions jusqu'au premier <code>catch</code> qui correspond.</div></details>
+<details class="q"><summary>❓ Question : Pourquoi attraper par référence ?</summary><div>Pour ne pas copier l'objet et garder son vrai type (le bon <code>what()</code>).</div></details>
+<details class="q"><summary>❓ Question : Pourquoi <code>throw()</code> après <code>what()</code> ?</summary><div>En C++98, <code>std::exception::what</code> promet de ne rien lancer. L'enfant doit faire la même promesse.</div></details>
+<details class="q"><summary>❓ Question : Que se passe-t-il si un constructeur lance ?</summary><div>L'objet n'est pas créé. Son destructeur n'est pas appelé.</div></details>
+<details class="q"><summary>❓ Question : Pourquoi ton <code>operator=</code> ne copie pas le nom ?</summary><div>Le nom est <code>const</code>. On ne peut le remplir que dans la liste d'initialisation d'un constructeur.</div></details>
+<details class="q"><summary>❓ Question : Pourquoi <code>class Bureaucrat;</code> dans Form.hpp ?</summary><div>Pour casser la boucle d'inclusion. Une référence n'a pas besoin de la classe complète.</div></details>
+<details class="q"><summary>❓ Question : Pourquoi AForm est abstraite ?</summary><div>Elle a une fonction virtuelle pure. On ne peut pas créer un « formulaire en général ».</div></details>
+<details class="q"><summary>❓ Question : Pourquoi le destructeur d'AForm est virtuel ?</summary><div>Pour que <code>delete</code> sur un <code>AForm*</code> appelle aussi le destructeur de l'enfant.</div></details>
+<details class="q"><summary>❓ Question : Pourquoi vérifier dans <code>execute</code> et pas dans chaque enfant ?</summary><div>Le code des vérifications est écrit une seule fois. Moins de copier-coller, moins d'erreurs.</div></details>
+<details class="q"><summary>❓ Question : Comment marche ton tableau dans makeForm ?</summary><div>Un tableau de noms, un tableau de pointeurs sur fonctions membres dans le même ordre. On trouve l'indice du nom, on appelle la fonction au même indice.</div></details>
+<details class="q"><summary>❓ Question : Qui libère le formulaire créé par le stagiaire ?</summary><div>Celui qui reçoit le pointeur (le main), avec <code>delete</code>.</div></details>
+</article>
+
+<article class="pg" id="x3" data-ch="Annexe" data-t="Erreurs de compilation fréquentes">
+<span class="eyebrow">Annexe</span><h2>Erreurs de compilation fréquentes</h2>
+<div class="tbl"><table><thead><tr><th>Message (extrait)</th><th>En français simple</th><th>Où regarder</th></tr></thead><tbody><tr><td>looser throw specifier for virtual const char* what() const</td><td>ton <code>what()</code> ne promet pas <code>throw()</code></td><td>la déclaration ET la définition de what</td></tr><tr><td>assignment of read-only member _name</td><td>tu modifies un attribut <code>const</code></td><td><code>operator=</code> : ne copie pas le nom</td></tr><tr><td>uninitialized const member</td><td>un attribut <code>const</code> pas rempli</td><td>la liste d'initialisation de chaque constructeur</td></tr><tr><td>invalid use of incomplete type class Bureaucrat</td><td>la classe est seulement « annoncée »</td><td>il manque <code>#include "Bureaucrat.hpp"</code> dans le .cpp</td></tr><tr><td>cannot declare variable to be of abstract type AForm</td><td>tu crées un AForm direct</td><td>crée un enfant à la place</td></tr><tr><td>no matching function for call to std::basic_ofstream ... (std::string&amp;)</td><td>C++98 veut un texte C</td><td>ajoute <code>.c_str()</code></td></tr><tr><td>passing const X as this argument discards qualifiers</td><td>appel d'une fonction non <code>const</code> sur un objet <code>const</code></td><td>ajoute <code>const</code> à la fin du getter</td></tr><tr><td>unused parameter</td><td>paramètre pas utilisé (squelette)</td><td><code>(void)nom;</code></td></tr><tr><td>must use .* or -&gt;* to call pointer-to-member function</td><td>mauvais appel du pointeur sur membre</td><td><code>(this-&gt;*tab[i])(target)</code> avec les parenthèses</td></tr></tbody></table></div>
+</article>
+
+<article class="pg" id="x4" data-ch="Annexe" data-t="Le main du sujet annoté">
+<span class="eyebrow">Annexe</span><h2>Les exemples du sujet, annotés façon cahier</h2>
+<div class="legend"><span>Surligneurs :</span><span class="m o">abstraite</span><span class="m g">concrète</span><span class="m b">fonction</span><span class="m y">exception</span><span class="m p">delete</span></div>
+<div class="paper">
+<div class="row"><pre>try
+{
+  <span class="m g">Bureaucrat</span> bob("Bob", 0);
+}</pre><ul class="notes"><li>« essaie » ce bloc.</li><li>Note 0 → le constructeur lance l'alarme. bob n'existe jamais.</li></ul></div>
+<div class="row"><pre>catch (<span class="m y">std::exception</span> &amp; e)
+{
+  std::cout &lt;&lt; e.<span class="m b">what</span>() &lt;&lt; std::endl;
+}</pre><ul class="notes"><li>Attrape toute alarme enfant de std::exception, par référence.</li><li>what() lit le panneau : « Bureaucrat: grade too high ».</li></ul></div>
+<div class="row"><pre>Intern   someRandomIntern;
+<span class="m o">AForm</span>*   rrf;</pre><ul class="notes"><li>Un stagiaire, sur la pile.</li><li>rrf : pointeur vers AForm. AForm est abstraite, mais un pointeur vers elle, c'est permis.</li></ul></div>
+<div class="row"><pre>rrf = someRandomIntern.<span class="m b">makeForm</span>(
+        "robotomy request", "Bender");</pre><ul class="notes"><li>Le stagiaire cherche « robotomy request » dans son tableau.</li><li>Il renvoie un new RobotomyRequestForm("Bender"), sur le tas.</li><li>Affiche « Intern creates robotomy request ».</li></ul></div>
+<div class="row"><pre><span class="m p">delete</span> rrf;</pre><ul class="notes"><li>Absent du sujet, mais obligatoire pour valgrind.</li><li>Destructeur virtuel → celui de RobotomyRequestForm est appelé, puis celui d'AForm.</li></ul></div>
+</div>
+</article>
+  <div class="pager"><button class="btn" id="prevB" type="button">← Précédente</button><button class="btn primary" id="nextB" type="button">Suivante →</button></div>
+</div>
+
+<script>
+(function () {
+  var pages = Array.prototype.slice.call(document.querySelectorAll('article.pg'));
+  var menu = document.getElementById('menu'), count = document.getElementById('count');
+  var tocSec = document.getElementById('sommaire'), toc = document.getElementById('toc'), tocBtn = document.getElementById('tocBtn');
+  var pager = document.querySelector('.pager');
+  var groups = {}, KEY = 'cpp05-page';
+  var o0 = document.createElement('option'); o0.value = 'sommaire'; o0.textContent = '☰ Sommaire'; menu.appendChild(o0);
+  pages.forEach(function (p, i) {
+    var ch = p.getAttribute('data-ch');
+    if (!groups[ch]) { groups[ch] = document.createElement('optgroup'); groups[ch].label = ch; menu.appendChild(groups[ch]); }
+    var o = document.createElement('option'); o.value = p.id;
+    o.textContent = (ch === 'Annexe' ? '' : (i + 1) + '. ') + p.getAttribute('data-t');
+    groups[ch].appendChild(o);
+  });
+  function idx(id) { for (var k = 0; k < pages.length; k++) if (pages[k].id === id) return k; return -1; }
+  function buildToc() {
+    toc.innerHTML = ''; var box = null, last = null;
+    pages.forEach(function (p, i) {
+      var ch = p.getAttribute('data-ch');
+      if (ch !== last) { box = document.createElement('div'); box.className = 'tocch'; var h = document.createElement('h3'); h.textContent = ch; box.appendChild(h); toc.appendChild(box); last = ch; }
+      var a = document.createElement('a'); a.href = '#' + p.id; if (i === cur) a.className = 'here';
+      var n = document.createElement('span'); n.className = 'n'; n.textContent = ch === 'Annexe' ? '·' : (i + 1);
+      var t = document.createElement('span'); t.textContent = p.getAttribute('data-t');
+      a.appendChild(n); a.appendChild(t);
+      var c = p.querySelector('.checks input');
+      if (c && c.checked) { var ok = document.createElement('span'); ok.className = 'ok'; ok.textContent = '✓'; a.appendChild(ok); }
+      a.addEventListener('click', function (e) { e.preventDefault(); show(i, true); });
+      box.appendChild(a);
+    });
+  }
+  var cur = 0;
+  function showToc() {
+    pages.forEach(function (p) { p.hidden = true; });
+    buildToc(); tocSec.hidden = false; pager.hidden = true;
+    menu.value = 'sommaire'; count.textContent = '';
+    tocBtn.setAttribute('aria-pressed', 'true');
+    var nav = document.querySelector('.booknav'); window.scrollTo(0, Math.max(0, nav.offsetTop - 8));
+  }
+  function show(i, scroll) {
+    if (i < 0) i = 0; if (i > pages.length - 1) i = pages.length - 1;
+    cur = i; tocSec.hidden = true; pager.hidden = false; tocBtn.setAttribute('aria-pressed', 'false');
+    pages.forEach(function (p, j) { p.hidden = (j !== i); });
+    menu.value = pages[i].id;
+    count.textContent = (i + 1) + ' / ' + pages.length;
+    ['prevT','prevB'].forEach(function (id) { document.getElementById(id).disabled = (i === 0); });
+    ['nextT','nextB'].forEach(function (id) { document.getElementById(id).disabled = (i === pages.length - 1); });
+    try { localStorage.setItem(KEY, pages[i].id); } catch (e) {}
+    if (history.replaceState) { try { history.replaceState(null, '', '#' + pages[i].id); } catch (e) {} }
+    if (scroll) { var nav = document.querySelector('.booknav'); window.scrollTo(0, Math.max(0, nav.offsetTop - 8)); }
+  }
+  tocBtn.addEventListener('click', function () { if (tocSec.hidden) showToc(); else show(cur, true); });
+  menu.addEventListener('change', function () { if (menu.value === 'sommaire') showToc(); else show(idx(menu.value), true); });
+  document.getElementById('prevT').onclick = document.getElementById('prevB').onclick = function () { show(tocSec.hidden ? cur - 1 : cur, true); };
+  document.getElementById('nextT').onclick = document.getElementById('nextB').onclick = function () { show(tocSec.hidden ? cur + 1 : cur, true); };
+  var gm = document.getElementById('goMethod');
+  if (gm) gm.addEventListener('click', function () { show(idx('m1'), true); });
+  var start = idx(location.hash.slice(1));
+  if (start < 0) { try { start = idx(localStorage.getItem(KEY) || ''); } catch (e) {} }
+  show(start < 0 ? 0 : start, false);
+})();
+(function () {
+  var boxes = document.querySelectorAll('.checks input[type="checkbox"]');
+  var KEY = 'cpp05-checks', saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+  function update() {
+    var done = 0; boxes.forEach(function (b) { if (b.checked) done++; });
+    document.getElementById('bar').style.width = (done / boxes.length * 100) + '%';
+    document.getElementById('pct').textContent = done + ' / ' + boxes.length + ' cochées';
+  }
+  boxes.forEach(function (b) {
+    if (Object.prototype.hasOwnProperty.call(saved, b.id)) b.checked = !!saved[b.id];
+    b.addEventListener('change', function () { saved[b.id] = b.checked; try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} update(); });
+  });
+  update();
+})();
+</script>
+
+</body></html>
+</body></html>

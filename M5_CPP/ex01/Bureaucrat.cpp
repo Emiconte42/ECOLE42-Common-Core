@@ -1,4 +1,5 @@
 #include "Bureaucrat.hpp"
+#include "Form.hpp"
 #include "utils/utils.hpp"
 
 Bureaucrat::Bureaucrat() : _name("Default"), _grade(150)
@@ -17,7 +18,7 @@ Bureaucrat::Bureaucrat(std::string const name, int grade): _name(name), _grade(g
 		throw Bureaucrat::GradeTooLowException();
 }
 
-Bureaucrat::Bureaucrat(Bureaucrat const & cpy)
+Bureaucrat::Bureaucrat(Bureaucrat const & cpy) : _name(cpy._name)
 {
 	if (CALL_LOG)
 		std::cout << GREEN << "Bureaucrat : Copy constructor called" << endofline;
@@ -44,7 +45,7 @@ Bureaucrat &Bureaucrat::operator=(Bureaucrat const &other)
 {
 	if (CALL_LOG)
 		std::cout << "Bureaucrat : Copy assignment operator called" << endofline;
-	if (this != &other) // protection : evite de se copier sur soi-meme (a = a)
+	if (this != &other)
 	{
 		this->_grade = other.getGrade();
 	}
@@ -53,42 +54,46 @@ Bureaucrat &Bureaucrat::operator=(Bureaucrat const &other)
 
 std::ostream & operator<<(std::ostream &o, Bureaucrat const &bur)
 {
-	o << bur.getName(); // met le resultat dans le flux
+	o << bur.getName();
 	o << ", bureaucrat grade ";
 	o << bur.getGrade();
 	o << ".";
-	return (o); // retourne le flux
+	return (o);
 }
 
 const char *Bureaucrat::GradeTooHighException::what() const throw ()
 {
-	return ("Bureaucrat: grade too high - grade > 150");
+	return ("Bureaucrat: grade too high - grade < 1");
 }
 
 const char *Bureaucrat::GradeTooLowException::what() const throw ()
 {
-	return ("Bureaucrat: grade too low - grade < 1");
+	return ("Bureaucrat: grade too low - grade > 150");
 }
+
 
 void Bureaucrat::incrementGrade()
 {
-	_grade = _grade - 1;
-	if (_grade > 150)
+	if (_grade <= 1)
 		throw Bureaucrat::GradeTooHighException();
-	else if (_grade < 1)
-		throw Bureaucrat::GradeTooLowException();
+	_grade = _grade - 1;
 }
 
 void Bureaucrat::decrementGrade()
 {
-	_grade = _grade + 1;
-	if (_grade > 150)
-		throw Bureaucrat::GradeTooHighException();
-	else if (_grade < 1)
+	if (_grade >= 150)
 		throw Bureaucrat::GradeTooLowException();
+	_grade = _grade + 1;
 }
 
-void Bureaucrat::signForm()
-{
-	
-}
+// void Bureaucrat::signForm(Form form) const
+// {
+// 	if (Form::beSigned = true)
+// 	{
+// 		si le formulaire est signe : <bureaucrat> signed <form>
+// 	}
+// 	else
+// 	{
+// 		Sinon, elle affichera quelque chose comme : bureaucrat> couldn't sign <form> because <reason>
+// 	}
+// }

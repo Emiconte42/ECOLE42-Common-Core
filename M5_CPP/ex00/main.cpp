@@ -14,63 +14,180 @@ int main()
 	try
 	{
 		// le numero risque : du code qui peut lancer une alarme
-		Bureaucrat robot("Bob", 40);
-		std::cout << robot << std::endl;
-		robot.decrementGrade();
-		std::cout << robot << std::endl;
-		robot.incrementGrade();
-		std::cout << robot << std::endl;
-		robot.incrementGrade();
-		std::cout << robot << std::endl;
-		robot.decrementGrade();
-		std::cout << robot << std::endl;
+		Bureaucrat bureaucrat("Bob", 40);
+		Bureaucrat bureaucrat1;
+		std::cout << "bureaucrat : " << bureaucrat << std::endl;
+		std::cout << "bureaucrat1 : " << bureaucrat1 << std::endl;
+		bureaucrat.decrementGrade();
+		std::cout << "bureaucrat : " << bureaucrat << std::endl;
+		bureaucrat.incrementGrade();
+		std::cout << "bureaucrat : " << bureaucrat << std::endl;
+		bureaucrat.incrementGrade();
+		std::cout << "bureaucrat : " << bureaucrat << std::endl;
+		bureaucrat.decrementGrade();
+		std::cout << "bureaucrat : " << bureaucrat << std::endl;
 	}
 	catch (std::exception & e)
 	{
 		std::cout << RED << e.what() << endofline; // le filet : on lit le message
 	}
 
+/*--------------------------------------------------------------------------------------*/
+
 	std::cout << BOLD_YELLOW << "\nTEST 2 - Grade = 1" << endofline;
 	try
 	{
-		Bureaucrat robot3("Paul", 1);
-		std::cout << robot3 << std::endl;
-		robot3.incrementGrade();
-		std::cout << robot3 << std::endl;
+		Bureaucrat bureaucrat("Paul", 1);
+		std::cout << "bureaucrat : " << bureaucrat << std::endl;
+		bureaucrat.incrementGrade();
+		std::cout << "bureaucrat : " << bureaucrat << std::endl;
 	}
 	catch (std::exception & e)
 	{
 		std::cout << RED << e.what() << endofline;
 	}
+
+/*--------------------------------------------------------------------------------------*/
 
 	std::cout << BOLD_YELLOW << "\nTEST 3 - Grade = 0" << endofline;
 	try
 	{
-		Bureaucrat robot2("Sam", 0);
+		Bureaucrat bureaucrat("Sam", 0);
 	}
 	catch (std::exception & e)
 	{
 		std::cout << RED << e.what() << endofline;
 	}
 
-		std::cout << BOLD_YELLOW << "\nTEST 4 - Grade = 150" << endofline;
+/*--------------------------------------------------------------------------------------*/
+
+	std::cout << BOLD_YELLOW << "\nTEST 4 - Grade = 150" << endofline;
 	try
 	{
-		Bureaucrat robot1("Henry", 150);
-		std::cout << robot1 << std::endl;
-		robot1.decrementGrade();
-		std::cout << robot1 << std::endl;
+		Bureaucrat bureaucrat("Henry", 150);
+		std::cout << "bureaucrat : " << bureaucrat << std::endl;
+		bureaucrat.decrementGrade();
+		std::cout << "bureaucrat : " << bureaucrat << std::endl;
 	}
 	catch (std::exception & e)
 	{
 		std::cout << RED << e.what() << endofline;
 	}
 
+/*--------------------------------------------------------------------------------------*/
 
 	std::cout << BOLD_YELLOW << "\nTEST 5 - Grade = 151" << endofline;
 	try
 	{
-		Bureaucrat robot2("Sam", 151);
+		Bureaucrat bureaucrat("Sam", 151);
+	}
+	catch (std::exception & e)
+	{
+		std::cout << RED << e.what() << endofline;
+	}
+
+/*--------------------------------------------------------------------------------------*/
+
+	std::cout << BOLD_YELLOW << "\nTEST 6 - copie d'assignation" << endofline;
+	try
+	{
+		Bureaucrat bureaucrat("Jerry", 50);
+		Bureaucrat bureaucrat1;
+		bureaucrat1 = bureaucrat;
+
+		std::cout << "bureaucrat : " << bureaucrat1 << std::endl;
+	}
+	catch (std::exception & e)
+	{
+		std::cout << RED << e.what() << endofline;
+	}
+
+/*--------------------------------------------------------------------------------------*/
+
+	std::cout << BOLD_YELLOW << "\nTEST 7 - constructeur par copie" << endofline;
+	try
+	{
+		Bureaucrat bureaucrat("Tom", 42);
+		Bureaucrat copie(bureaucrat);
+		std::cout << "bureaucrat : " << bureaucrat << std::endl;
+		std::cout << "copie : " << copie << std::endl;
+		copie.incrementGrade();
+		std::cout << "bureaucrat : " << bureaucrat << std::endl;
+		std::cout << "copie : " << copie << std::endl;
+	}
+	catch (std::exception & e)
+	{
+		std::cout << RED << e.what() << endofline;
+	}
+
+/*--------------------------------------------------------------------------------------*/
+
+	std::cout << BOLD_YELLOW << "\nTEST 8 - auto-assignation (a = a)" << endofline;
+	try
+	{
+		Bureaucrat bureaucrat("Lisa", 10);
+		Bureaucrat &meme = bureaucrat;
+		bureaucrat = meme;
+		std::cout << "bureaucrat : " << bureaucrat << std::endl;
+	}
+	catch (std::exception & e)
+	{
+		std::cout << RED << e.what() << endofline;
+	}
+
+/*--------------------------------------------------------------------------------------*/
+
+	std::cout << BOLD_YELLOW << "\nTEST 9 - etat apres une exception (increment a 1)" << endofline;
+	{
+		// declare HORS du try pour pouvoir l'afficher apres le catch
+		Bureaucrat bureaucrat("Anna", 1);
+		try
+		{
+			bureaucrat.incrementGrade();
+		}
+		catch (std::exception & e)
+		{
+			std::cout << RED << e.what() << endofline;
+		}
+		std::cout << "bureaucrat apres catch (attendu : grade 1) : " << bureaucrat << std::endl;
+	}
+
+/*--------------------------------------------------------------------------------------*/
+
+	std::cout << BOLD_YELLOW << "\nTEST 10 - etat apres une exception (decrement a 150)" << endofline;
+	{
+		Bureaucrat bureaucrat("Marc", 150);
+		try
+		{
+			bureaucrat.decrementGrade();
+		}
+		catch (std::exception & e)
+		{
+			std::cout << RED << e.what() << endofline;
+		}
+		std::cout << "bureaucrat apres catch (attendu : grade 150) : " << bureaucrat << std::endl;
+	}
+
+/*--------------------------------------------------------------------------------------*/
+
+	std::cout << BOLD_YELLOW << "\nTEST 11 - bornes dans le bon sens (doit marcher)" << endofline;
+	try
+	{
+		Bureaucrat bureaucrat("Bas", 150);
+		std::cout << "bureaucrat : " << bureaucrat << std::endl;
+		bureaucrat.incrementGrade();
+		std::cout << "bureaucrat (attendu : grade 149) : " << bureaucrat << std::endl;
+	}
+	catch (std::exception & e)
+	{
+		std::cout << RED << e.what() << endofline;
+	}
+	try
+	{
+		Bureaucrat bureaucrat("Haut", 1);
+		std::cout << "bureaucrat : " << bureaucrat << std::endl;
+		bureaucrat.decrementGrade();
+		std::cout << "bureaucrat (attendu : grade 2) : " << bureaucrat << std::endl;
 	}
 	catch (std::exception & e)
 	{

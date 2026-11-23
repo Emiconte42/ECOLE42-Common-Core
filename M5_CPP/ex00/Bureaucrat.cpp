@@ -12,12 +12,12 @@ Bureaucrat::Bureaucrat(std::string const name, int grade): _name(name), _grade(g
 	if (CALL_LOG)
 		std::cout << GREEN << "Bureaucrat : Parametric constructor called" << endofline;
 	if (grade > 150)
-		throw Bureaucrat::GradeTooHighException();
-	else if (grade < 1)
 		throw Bureaucrat::GradeTooLowException();
+	else if (grade < 1)
+		throw Bureaucrat::GradeTooHighException();
 }
 
-Bureaucrat::Bureaucrat(Bureaucrat const & cpy)
+Bureaucrat::Bureaucrat(Bureaucrat const & cpy) : _name(cpy._name)
 {
 	if (CALL_LOG)
 		std::cout << GREEN << "Bureaucrat : Copy constructor called" << endofline;
@@ -62,28 +62,24 @@ std::ostream & operator<<(std::ostream &o, Bureaucrat const &bur)
 
 const char *Bureaucrat::GradeTooHighException::what() const throw ()
 {
-	return ("Bureaucrat: grade too high - grade > 150");
+	return ("Bureaucrat: grade too high - grade < 1");
 }
 
 const char *Bureaucrat::GradeTooLowException::what() const throw ()
 {
-	return ("Bureaucrat: grade too low - grade < 1");
+	return ("Bureaucrat: grade too low - grade > 150");
 }
 
 void Bureaucrat::incrementGrade()
 {
-	_grade = _grade - 1;
-	if (_grade > 150)
+	if (_grade <= 1)
 		throw Bureaucrat::GradeTooHighException();
-	else if (_grade < 1)
-		throw Bureaucrat::GradeTooLowException();
+	_grade = _grade - 1;
 }
 
 void Bureaucrat::decrementGrade()
 {
-	_grade = _grade + 1;
-	if (_grade > 150)
-		throw Bureaucrat::GradeTooHighException();
-	else if (_grade < 1)
+	if (_grade >= 150)
 		throw Bureaucrat::GradeTooLowException();
+	_grade = _grade + 1;
 }
