@@ -13,16 +13,15 @@ Bureaucrat::Bureaucrat(std::string const name, int grade): _name(name), _grade(g
 	if (CALL_LOG)
 		std::cout << GREEN << "Bureaucrat : Parametric constructor called" << endofline;
 	if (grade > 150)
-		throw Bureaucrat::GradeTooHighException();
-	else if (grade < 1)
 		throw Bureaucrat::GradeTooLowException();
+	else if (grade < 1)
+		throw Bureaucrat::GradeTooHighException();
 }
 
-Bureaucrat::Bureaucrat(Bureaucrat const & cpy) : _name(cpy._name)
+Bureaucrat::Bureaucrat(Bureaucrat const & cpy) : _name(cpy._name), _grade(cpy._grade)
 {
 	if (CALL_LOG)
 		std::cout << GREEN << "Bureaucrat : Copy constructor called" << endofline;
-	*this = cpy;
 }
 
 Bureaucrat::~Bureaucrat()
@@ -86,14 +85,15 @@ void Bureaucrat::decrementGrade()
 	_grade = _grade + 1;
 }
 
-// void Bureaucrat::signForm(Form form) const
-// {
-// 	if (Form::beSigned = true)
-// 	{
-// 		si le formulaire est signe : <bureaucrat> signed <form>
-// 	}
-// 	else
-// 	{
-// 		Sinon, elle affichera quelque chose comme : bureaucrat> couldn't sign <form> because <reason>
-// 	}
-// }
+void Bureaucrat::signForm(Form &form) const
+{
+	try
+	{
+		form.beSigned(*this);
+		std::cout << this->_name << " signed " << form.getName() << std::endl;
+	}
+	catch (std::exception & e)
+	{
+		std::cout << this->_name << " couldn't sign " << form.getName() << " because " << e.what() << "." << std::endl;
+	}
+}

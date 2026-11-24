@@ -8,9 +8,15 @@ Mots nouveaux
 	catch : le filet. Il attrape l'alarme et décide quoi faire (souvent : afficher le message).
 	exception : l'objet alarme qui tombe. Il transporte un message, qu'on lit avec what().
 */
+
+static void	title(std::string const &str)
+{
+	std::cout << BOLD_YELLOW << "\n===== " << str << " =====" << endofline;
+}
+
 int main()
 {
-	std::cout << BOLD_YELLOW << "\nTEST 1 - normal" << endofline;
+	title("TEST 1 - normal");
 	try
 	{
 		// le numero risque : du code qui peut lancer une alarme
@@ -34,7 +40,7 @@ int main()
 
 /*--------------------------------------------------------------------------------------*/
 
-	std::cout << BOLD_YELLOW << "\nTEST 2 - Grade = 1" << endofline;
+	title("\nTEST 2 - Grade = 1");
 	try
 	{
 		Bureaucrat bureaucrat("Paul", 1);
@@ -49,7 +55,7 @@ int main()
 
 /*--------------------------------------------------------------------------------------*/
 
-	std::cout << BOLD_YELLOW << "\nTEST 3 - Grade = 0" << endofline;
+	title("\nTEST 3 - Grade = 0");
 	try
 	{
 		Bureaucrat bureaucrat("Sam", 0);
@@ -61,7 +67,7 @@ int main()
 
 /*--------------------------------------------------------------------------------------*/
 
-	std::cout << BOLD_YELLOW << "\nTEST 4 - Grade = 150" << endofline;
+	title("\nTEST 4 - Grade = 150");
 	try
 	{
 		Bureaucrat bureaucrat("Henry", 150);
@@ -76,7 +82,7 @@ int main()
 
 /*--------------------------------------------------------------------------------------*/
 
-	std::cout << BOLD_YELLOW << "\nTEST 5 - Grade = 151" << endofline;
+	title("\nTEST 5 - Grade = 151");
 	try
 	{
 		Bureaucrat bureaucrat("Sam", 151);
@@ -88,7 +94,7 @@ int main()
 
 /*--------------------------------------------------------------------------------------*/
 
-	std::cout << BOLD_YELLOW << "\nTEST 6 - copie d'assignation" << endofline;
+	title("\nTEST 6 - copie d'assignation");
 	try
 	{
 		Bureaucrat bureaucrat("Jerry", 50);
@@ -104,7 +110,7 @@ int main()
 
 /*--------------------------------------------------------------------------------------*/
 
-	std::cout << BOLD_YELLOW << "\nTEST 7 - constructeur par copie" << endofline;
+	title("\nTEST 7 - constructeur par copie");
 	try
 	{
 		Bureaucrat bureaucrat("Tom", 42);
@@ -122,7 +128,7 @@ int main()
 
 /*--------------------------------------------------------------------------------------*/
 
-	std::cout << BOLD_YELLOW << "\nTEST 8 - auto-assignation (a = a)" << endofline;
+	title("\nTEST 8 - auto-assignation (a = a)");
 	try
 	{
 		Bureaucrat bureaucrat("Lisa", 10);
@@ -137,7 +143,7 @@ int main()
 
 /*--------------------------------------------------------------------------------------*/
 
-	std::cout << BOLD_YELLOW << "\nTEST 9 - etat apres une exception (increment a 1)" << endofline;
+	title("\nTEST 9 - etat apres une exception (increment a 1)");
 	{
 		// declare HORS du try pour pouvoir l'afficher apres le catch
 		Bureaucrat bureaucrat("Anna", 1);
@@ -154,7 +160,7 @@ int main()
 
 /*--------------------------------------------------------------------------------------*/
 
-	std::cout << BOLD_YELLOW << "\nTEST 10 - etat apres une exception (decrement a 150)" << endofline;
+	title("\nTEST 10 - etat apres une exception (decrement a 150)");
 	{
 		Bureaucrat bureaucrat("Marc", 150);
 		try
@@ -170,7 +176,7 @@ int main()
 
 /*--------------------------------------------------------------------------------------*/
 
-	std::cout << BOLD_YELLOW << "\nTEST 11 - bornes dans le bon sens (doit marcher)" << endofline;
+	title("\nTEST 11 - bornes dans le bon sens (doit marcher)");
 	try
 	{
 		Bureaucrat bureaucrat("Bas", 150);

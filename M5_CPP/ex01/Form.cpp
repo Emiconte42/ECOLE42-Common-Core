@@ -64,19 +64,20 @@ Form &Form::operator=(Form const &other)
 std::ostream & operator<<(std::ostream &o, Form const &form)
 {
 	o << form.getName() << " : " << std::endl;
-	o << "  Grade to sign < " << form.getGradeToSign() << std::endl;
-	o << "  Grade to execute < " << form.getGradeToExecute();
+	o << "  Signed           : " << (form.getSigned() ? "Yes" : "No") << std::endl;
+	o << "  Grade to sign    : " << form.getGradeToSign() << std::endl;
+	o << "  Grade to execute : " << form.getGradeToExecute();
 	return (o);
 }
 
 const char *Form::GradeTooHighException::what() const throw ()
 {
-	return ("Form: grade too high - grade < 1");
+	return ("Form: grade too high");
 }
 
 const char *Form::GradeTooLowException::what() const throw ()
 {
-	return ("Form: grade too low - grade > 150");
+	return ("Form: grade too low");
 }
 
 void Form::beSigned(Bureaucrat const &bur)
