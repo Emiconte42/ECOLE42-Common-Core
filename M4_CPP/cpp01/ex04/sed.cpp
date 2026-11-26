@@ -35,7 +35,7 @@ std::string	readFile(std::ifstream &file)
 	std::string	content; // permet d'etre rempli via getline() pour lire un fichier
 	std::string line; // on avance ligne par ligne
 	while (getline(file, line)) // tant qu'il y a du texte dans le fichier
-		content += line + '\n';
+		content += line + '\n';t>_shrubbery dans le répertoirt>_shrubbery dans le répertoir
 	return (content);
 }
 
