@@ -9,7 +9,7 @@
 class AForm
 {
 	protected :
-		virtual void		executeAction() const = 0;
+		virtual void		executeAction(void) const = 0;
 
 	private :
 		std::string const	_name;

@@ -14,8 +14,8 @@ CFLAGS		= -Wall -Wextra -Werror -std=c++98
 
 OBJ_DIR = objs/
 
-SRCS = main.cpp Bureaucrat.cpp AForm.cpp ShrubberyCreationForm.cpp/
-       RobotomyRequestForm.cpp PresidentialPardonForm.cpp/
+SRCS = main.cpp Bureaucrat.cpp AForm.cpp ShrubberyCreationForm.cpp\
+       RobotomyRequestForm.cpp PresidentialPardonForm.cpp\
 	   utils/utils.cpp
 
 # **************************************************************************** #
